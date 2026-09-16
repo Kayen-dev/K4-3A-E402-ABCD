@@ -4,14 +4,13 @@
 
 ## 👥 Thành viên nhóm & Phân công vai trò
 
-**Lớp:** 3A · **Phòng:** ____ · **Cụm:** ____ · **Track:** ____
+**Lớp:** 3A · **Phòng:** E402 · **Cụm:** ____ · **Track:** C · Lesson Studio / ScriptScout
 
 | Họ và Tên | Mã Học Viên | Vai trò chính | Phần việc đảm nhiệm trong dự án |
 |---|---|---|---|
-|  |  |  |  |
-|  |  |  |  |
-|  |  |  |  |
-|  |  |  |  |
+| Hồ Đình Tuấn Kiệt | 2A202602785 | PM | Quản lý tiến độ, chốt lát cắt sản phẩm, điều phối demo và tổng hợp deliverable |
+| Nguyễn Tuấn Thành | 2A202602640 | Dev-QA | Xây dựng prototype, kiểm thử luồng hoạt động, chuẩn bị golden set và đo chất lượng |
+| Nguyễn Trần Kiên | 2A2202602571 | AI-BA | Phân tích bài toán, thiết kế luồng AI/agent, xử lý nguồn và đặc tả tiêu chí đánh giá |
 
 > Nhóm copy nguyên file README này về repo của mình, rồi điền bảng trên. Cột **Phần việc đảm nhiệm** ghi càng cụ thể càng tốt.
 
