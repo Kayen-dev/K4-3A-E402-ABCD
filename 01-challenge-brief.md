@@ -99,6 +99,7 @@ Canvas nháp nộp tại CP1; evidence và spec hoàn thiện dần, chốt tạ
 | Hạng mục | Nội dung cần có |
 |---|---|
 | Prototype | Luồng nhập đề bài, tìm nguồn, chấm nguồn, tạo 5 câu kịch bản, gắn nguồn theo câu và viết lại khi bỏ nguồn |
+| Link demo | Demo hiện tại: https://abcd-mockup.vercel.app |
 | Hồ sơ nguồn | Mỗi nguồn có URL, tên nguồn/tổ chức, ngày đăng hoặc cập nhật, mức tin cậy, lý do và đoạn trích dùng làm bằng chứng |
 | Kịch bản | 5 câu mở đầu dạng văn nói, có citation theo từng câu chứa claim |
 | Eval | Bộ câu thử/golden set, kết quả chạy, số câu đúng nguồn, số câu thiếu nguồn, số câu bị đánh dấu chưa kiểm chứng |
