@@ -39,6 +39,31 @@ Kịch bản phải là văn nói, đọc lên nghe tự nhiên, mỗi ý một 
 
 Một người viết · cần 5 câu mở đầu cho chủ đề X · AI tìm 3 nguồn, chấm tin cậy, viết 5 câu mỗi câu gắn nguồn · người viết loại một nguồn → chỉ câu phụ thuộc viết lại.
 
+## Canvas nháp
+
+Canvas nháp nộp tại CP1, dùng để chốt rõ nhóm đang giải bài toán nào trước khi build:
+
+| Ô canvas | Nội dung cần điền |
+|---|---|
+| Người dùng cụ thể | Ai là người dùng chính của prototype trong đề này? Ví dụ: người viết kịch bản bài giảng, giảng viên duyệt nguồn. |
+| Pain cụ thể | Người đó đang làm việc gì, vướng ở đâu, hậu quả là gì nếu không giải quyết? |
+| Bằng chứng | Nhóm chứng minh pain bằng khảo sát, mining dữ liệu, ví dụ thật, hoặc quan sát có thể kiểm lại như thế nào? |
+| Lát cắt prototype | Một câu theo format: một người dùng · một công việc · một quyết định AI · một kết quả. |
+
+## 5 tiêu chí nghiệm thu bài toán
+
+Áp cho mọi hướng — kể cả tối ưu tính năng có sẵn.
+
+| # | Tiêu chí | Đạt khi |
+|---|---|---|
+| 1 | Pain cụ thể | Ai — đang làm gì — vướng đâu — hậu quả gì. "Mọi người thấy bất tiện" = không đạt |
+| 2 | Bằng chứng | **(A)** khảo sát ≥20 người ngoài nhóm, ≥50% xác nhận, log toàn bộ câu hỏi + từng câu trả lời; và/hoặc **(B)** mining data: số đếm được + ≥5 ví dụ nguyên văn + phương pháp đếm kiểm lại được |
+| 3 | Problem statement + impact | Không chữ AI; bảng impact ≥3 ứng viên (bao nhiêu người × tần suất × tốn gì mỗi lần) + lý do chọn + ứng viên đã loại |
+| 4 | Lát cắt prototype được | Một câu theo đúng format trên, demo được trong 5 phút, build được trong thời gian sự kiện |
+| 5 | User sẵn sàng thử *(khuyến khích — tính bonus)* | ≥2 người thật ngoài nhóm (tên cụ thể) đồng ý thử prototype trước demo |
+
+*Canvas nháp nộp tại CP1; evidence và spec hoàn thiện dần, chốt tại hạn chốt spec (21:00 17/9, tại CP4).*
+
 ## Data & fixture
 
 Không cần data pack — agent tự tìm web. `data/studio-pack/c3-scriptscout/` có mẫu kịch bản chung, một kịch bản thật 40 câu làm đích, hồ sơ nguồn mẫu và bảy câu đã nối vào nguồn, cùng 8 chủ đề để luyện.
