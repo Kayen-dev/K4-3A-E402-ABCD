@@ -1,0 +1,6 @@
+{
+  "name": "ScriptScout",
+  "description": "Duyệt nguồn chuẩn giảng viên & Tạo kịch bản bài giảng có dẫn chứng học thuật",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
