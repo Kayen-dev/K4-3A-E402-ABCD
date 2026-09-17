@@ -5,6 +5,7 @@ import { canUseSource } from './source-policy.js';
 import { approvedFeedbackForReview } from './feedback.js';
 import { validatePublicUrl } from './scrape.js';
 import { parseScriptMarkdown } from './script-markdown.js';
+import { assertSuitableLesson } from './content-policy.js';
 import { vietCau, gomFact, soatVanNoi, kiemChungClaims } from './pipeline.js';
 
 const locks = new Map();
@@ -62,6 +63,7 @@ export async function createProject(body) {
     sources: [], claims: {}, sentences: mode === 'qa' ? splitScript(imported.script) : [], findings: [],
     sourceApprovalRevision: null, approvedRevision: null, reviewStatus: 'not-run', run: null, audit: [], requestIds: [] };
   if (!Number.isFinite(p.brief.duration) || p.brief.duration < 1 || p.brief.duration > 120) throw fault(400, 'INVALID_DURATION', 'Thời lượng phải từ 1 đến 120 phút');
+  if (mode === 'research') await assertSuitableLesson(p.brief);
   await save(p); return p;
 }
 function splitScript(text) {
@@ -190,6 +192,7 @@ async function longAction(id, body, emit) {
         : start.brief.topic;
       if (!topic) throw fault(400, 'INVALID_SENTENCE', 'Chọn câu cần kiểm chứng');
       const goal = start.mode === 'research' ? start.brief.goal : '';
+      await assertSuitableLesson({ topic, goal, audience: start.brief.audience });
       const urls = await searchUrls(topic, goal, controller.signal, query => {
         researchQueries.push(query);
         progress({ type: 'progress', message: `Đang tìm: ${query}` });

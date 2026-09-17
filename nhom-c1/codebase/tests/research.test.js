@@ -100,6 +100,7 @@ test('generation uses article content, saves new evidence and media per scene, r
   t.mock.method(globalThis, 'fetch', async (_, options) => {
     const request = JSON.parse(options.body);
     const system = request.messages[0].content;
+    if (system.includes('phân loại đầu vào')) return Response.json({ choices: [{ message: { content: '{"allowed":true}' } }] });
     if (system.includes('verdicts')) return Response.json({ choices: [{ message: { content: JSON.stringify({ verdicts: [{ id: 't1', status: 'supported', reason: 'Nội dung khớp cả hai nguồn' }] }) } }] });
     const context = request.messages.find(message => message.role === 'user').content;
     assert(context.includes('Mục tiêu bài học: Hiểu AI'));

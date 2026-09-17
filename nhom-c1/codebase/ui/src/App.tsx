@@ -588,30 +588,40 @@ function ProjectsList({
   open: (id: string) => void;
   remove: (id: string) => void;
 }) {
+  const pageSize = 5;
+  const [page, setPage] = useState(1);
+  const pageCount = Math.max(1, Math.ceil(projects.length / pageSize));
+  const currentPage = Math.min(page, pageCount);
+  useEffect(() => {
+    setPage(previous => Math.min(previous, pageCount));
+  }, [pageCount]);
+  const start = (currentPage - 1) * pageSize;
+  const visibleProjects = projects.slice(start, start + pageSize);
   return (
-    <section className={card}>
+    <section className={`${card} min-w-0 self-start`}>
       <h2 className="font-bold text-slate-950">Mở lại phiên làm việc</h2>
       <p className="mt-1 text-sm text-slate-500">
         Tiếp tục từ phiên đã lưu trên máy chủ.
       </p>
       {projects.length ? (
         <ul className="mt-4 divide-y divide-slate-100">
-          {projects.map((project) => (
+          {visibleProjects.map((project) => (
             <li
               key={project.id}
-              className="flex items-center justify-between gap-3 py-3"
+              className="flex min-h-16 items-center justify-between gap-3 py-2"
             >
-              <button className="min-w-0 text-left" onClick={() => open(project.id)}>
+              <button className="min-w-0 flex-1 text-left focus-visible:outline-indigo-600" title={project.title} onClick={() => open(project.id)}>
                 <span className="block truncate font-semibold text-slate-800">
                   {project.title}
                 </span>
-                <span className="text-xs text-slate-500">
+                <span className="block truncate text-xs text-slate-500">
                   {new Date(project.updatedAt).toLocaleString("vi-VN")} · v
                   {project.revision}
                 </span>
               </button>
               <button
-                className="text-sm font-semibold text-rose-600 hover:underline"
+                className="min-h-11 shrink-0 px-2 text-sm font-semibold text-rose-600 hover:underline focus-visible:outline-indigo-600"
+                aria-label={`Xóa phiên ${project.title}`}
                 onClick={() => remove(project.id)}
               >
                 Xóa
@@ -623,6 +633,17 @@ function ProjectsList({
         <div className="mt-4 rounded-2xl bg-slate-50 p-4 text-sm text-slate-500">
           Chưa có phiên nào. Tạo bài học mới để bắt đầu.
         </div>
+      )}
+      {projects.length > pageSize && (
+        <nav aria-label="Phân trang phiên làm việc" className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3">
+          <p aria-live="polite" className="text-xs text-slate-500">
+            {start + 1}–{Math.min(start + pageSize, projects.length)} / {projects.length} phiên · Trang {currentPage}/{pageCount}
+          </p>
+          <div className="flex gap-2">
+            <button type="button" className={`${secondary} min-h-11`} disabled={currentPage === 1} onClick={() => setPage(currentPage - 1)} aria-label="Trang phiên trước">Trước</button>
+            <button type="button" className={`${secondary} min-h-11`} disabled={currentPage === pageCount} onClick={() => setPage(currentPage + 1)} aria-label="Trang phiên tiếp theo">Sau</button>
+          </div>
+        </nav>
       )}
     </section>
   );
@@ -1124,7 +1145,7 @@ function TeacherApp({ user, onLogout }: { user: User; onLogout: () => void }) {
     setProgressLog([]);
     onProgress(
       mode === "research"
-        ? "Đang tạo phiên và chuẩn bị truy vấn research..."
+        ? "Đang kiểm tra nội dung bài học và chuẩn bị tìm tài liệu..."
         : "Đang tạo phiên rà soát...",
     );
     try {
