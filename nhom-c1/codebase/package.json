@@ -9,6 +9,7 @@
     "ui:dev": "npm --prefix ui run dev",
     "build": "npm --prefix ui run build",
     "typecheck": "npm --prefix ui run typecheck",
+    "test:research": "node --test tests/research.test.js",
     "eval": "node ../eval/run.js",
     "eval:refactor": "node eval-refactor.js"
   },
@@ -16,6 +17,7 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@vercel/blob": "^2.8.0"
+    "@vercel/blob": "^2.8.0",
+    "cheerio": "1.0.0"
   }
 }

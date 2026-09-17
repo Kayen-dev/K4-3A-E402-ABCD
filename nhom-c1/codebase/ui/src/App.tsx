@@ -149,6 +149,7 @@ function exportMarkdown(project: Project) {
       `Lời đọc: ${sentence.text}`,
       "",
       `Gợi ý hình: ${sentence.visual || "Chưa có"}`,
+      ...(sentence.media ? [`Media tham khảo (${sentence.media.kind === 'image' ? 'ảnh' : 'video'}): ${sentence.media.url}`] : []),
       "",
       `Nguồn: ${
         sentence.evidenceIds
@@ -661,12 +662,7 @@ function ResearchPanel({
   viewSource: (id: string) => void;
 }) {
   const usable = project.sources.filter(canUseSource).length;
-  const readCount = project.sources.filter(
-    (source) =>
-      source.snapshot ||
-      source.trich_dan?.length ||
-      source.trang_thai !== "chua-cham",
-  ).length;
+  const readCount = project.sources.filter((source) => !!source.snapshot?.trim() && source.trang_thai !== 'khong-doc-duoc').length;
   const checkedUsable = selected.filter((id) =>
     project.sources.some((source) => source.nguon_id === id && canUseSource(source)),
   ).length;
@@ -789,7 +785,10 @@ function ResearchPanel({
       <div className="grid gap-4 lg:grid-cols-[1fr_18rem]">
         <div className="space-y-3">
           {project.sources.length ? (
-            [...project.sources].sort((a, b) => Number(!!b.trich_dan?.length) - Number(!!a.trich_dan?.length)).map((source, index) => {
+            [...project.sources].sort((a, b) =>
+              Number(!!b.snapshot?.trim() && b.trang_thai !== 'khong-doc-duoc') - Number(!!a.snapshot?.trim() && a.trang_thai !== 'khong-doc-duoc')
+              || Number(!!b.trich_dan?.length) - Number(!!a.trich_dan?.length)
+            ).map((source, index) => {
               const isUsable = canUseSource(source);
               const isSelected = selected.includes(source.nguon_id) && isUsable;
               return (
@@ -835,6 +834,7 @@ function ResearchPanel({
                   <p className="mt-3 text-sm leading-6 text-slate-600">
                     {source.ly_do || "Chưa có ghi chú đánh giá nguồn."}
                   </p>
+                  {source.snapshot && source.trang_thai !== 'khong-doc-duoc' && <p className="mt-2 line-clamp-3 text-sm leading-6 text-slate-600">{source.snapshot.slice(0, 350)}</p>}
                   <div className="mt-3 flex flex-wrap items-center gap-2">
                     <button
                       className={secondary}
@@ -848,9 +848,11 @@ function ResearchPanel({
                       </span>
                     ) : (
                       <span className="text-xs font-semibold text-amber-700">
-                        Chưa có đoạn làm căn cứ · vẫn có thể chọn
+                        Chưa có đoạn làm căn cứ {isUsable ? '· vẫn có thể chọn' : ''}
                       </span>
                     )}
+                    {!!source.snapshot && source.trang_thai !== 'khong-doc-duoc' && <span className="text-xs font-semibold text-emerald-700">Đã lấy nội dung · {source.snapshot.length.toLocaleString('vi-VN')} ký tự</span>}
+                    {!!source.media?.length && <span className="text-xs font-semibold text-indigo-700">{source.media.length} ảnh/video tham khảo</span>}
                   </div>
                 </article>
               );
@@ -870,8 +872,8 @@ function ResearchPanel({
             {checkedUsable}/{usable}
           </p>
           <p className="mt-2 text-sm leading-6 text-slate-600">
-            Có thể chọn nguồn chưa có đoạn trích. Nội dung từ các nguồn này cần
-            kiểm chứng trước khi coi là có dẫn chứng.
+            Kịch bản dựa vào nội dung các nguồn đã chọn và mục tiêu học xong.
+            Nguồn có nội dung được xếp trước; mỗi thông tin cần đoạn làm căn cứ để kiểm chứng.
           </p>
           <button
             className={`${primary} mt-5 w-full`}
@@ -1394,6 +1396,17 @@ function TeacherApp({ user, onLogout }: { user: User; onLogout: () => void }) {
                         <p className="text-lg leading-8 text-slate-800">{sentence.text}</p>
                       )}
                       {sentence.visual && <p className="rounded-2xl bg-slate-50 p-3 text-sm text-slate-600"><span className="font-semibold text-slate-800">Gợi ý hình:</span> {sentence.visual}</p>}
+                      {!!sentence.sourceIds?.length && <div className="space-y-1 text-sm">
+                        <p className="font-semibold text-slate-800">Nguồn của cảnh này:</p>
+                        {sentence.sourceIds.map(id => {
+                          const reference = project.sources.find(item => item.nguon_id === id);
+                          return reference ? <a key={id} href={reference.url} target="_blank" rel="noopener noreferrer" className="block break-all text-indigo-700 underline">{reference.meta?.tieu_de || reference.url} · {reference.url}</a> : null;
+                        })}
+                      </div>}
+                      {sentence.media && <div className="rounded-2xl border border-slate-200 p-3">
+                        {sentence.media.kind === 'image' && <img src={sentence.media.url} alt={`Ảnh tham khảo cho cảnh ${sentence.scene}`} loading="lazy" referrerPolicy="no-referrer" className="mb-2 max-h-56 rounded-xl object-contain" />}
+                        <a href={sentence.media.url} target="_blank" rel="noopener noreferrer" className="break-all text-sm font-semibold text-indigo-700 underline">Mở {sentence.media.kind === 'image' ? 'ảnh' : 'video'} tham khảo</a>
+                      </div>}
                       <div className="flex flex-wrap gap-2">
                         <button className={secondary} onClick={() => { setEditing(sentence.id); setEditText(sentence.text); }}>Sửa câu</button>
                         {sentence.evidenceIds.map((id) => <button key={id} className={secondary} onClick={() => viewSource(id)}>Xem nguồn</button>)}
@@ -1449,9 +1462,14 @@ function TeacherApp({ user, onLogout }: { user: User; onLogout: () => void }) {
                 <blockquote key={index} className={`my-2 rounded-2xl border-l-4 p-3 text-sm leading-6 ${quote === focusQuote ? "border-indigo-700 bg-indigo-100" : "border-indigo-400 bg-indigo-50"}`}>{quote}</blockquote>
               ))
             ) : <p className="mt-2 text-sm text-slate-500">Chưa có đoạn trích hợp lệ.</p>}
+            {!!source.media?.length && <div className="mt-5 space-y-2">
+              <h3 className="font-bold text-slate-950">Ảnh/video từ tài liệu</h3>
+              {source.media.map(item => <a key={item.url} className="block break-all text-sm text-indigo-700 underline" href={item.url} target="_blank" rel="noopener noreferrer">{item.kind === 'image' ? 'Ảnh' : 'Video'} · {item.url}</a>)}
+            </div>}
             <details className="mt-5 rounded-2xl border border-slate-200 p-4">
               <summary className="cursor-pointer font-semibold text-slate-800">Xem toàn bộ nội dung đã đọc và mã đối chiếu</summary>
               <p className="mt-3 break-all text-xs text-slate-500">SHA-256: {source.snapshot_hash || "Không có"}</p>
+              {source.fetched_at && <p className="mt-2 text-xs text-slate-500">Đọc lúc {new Date(source.fetched_at).toLocaleString('vi-VN')} · {source.extraction_method === 'tavily-extract' ? 'Trích xuất dự phòng' : 'Đọc HTML'}</p>}
               <pre className="mt-3 max-h-80 overflow-auto whitespace-pre-wrap rounded-2xl bg-slate-950 p-4 text-xs leading-5 text-slate-100">{source.snapshot || "Không đọc được nội dung"}</pre>
             </details>
           </div>

@@ -31,7 +31,7 @@ import {
    QUYẾT ĐỊNH TRUNG TÂM
    ═══════════════════════════════════════════════════════════════════ */
 
-export async function quyetDinhNguon(url, { chu_de, fixtures, nguon_id, onLog } = {}) {
+export async function quyetDinhNguon(url, { chu_de, muc_tieu = '', fixtures, nguon_id, onLog, signal } = {}) {
   const kq = {
     nguon_id: nguon_id || null,   // gán ở bước A sau khi biết fixtures
     url,
@@ -43,13 +43,17 @@ export async function quyetDinhNguon(url, { chu_de, fixtures, nguon_id, onLog } 
     cach_ly: [],             // text chỉ thị ẩn — KHÔNG BAO GIỜ vào prompt của AI 3
     trich_dan: [],
     meta: {},
+    media: [],
     ai_da_goi: false,
   };
 
   // ── Bước A · tải trang (code)
-  const trang = await scrape(url, { fixtures });
+  const trang = await scrape(url, { fixtures, signal });
   kq.nguon_id = kq.nguon_id || trang.nguon_id || url.replace(/^https?:\/\//, "").slice(0, 40);
   kq.meta = trang.meta || {};
+  kq.media = trang.media || [];
+  kq.extraction_method = trang.extraction_method;
+  kq.fetched_at = trang.fetched_at;
   kq.status = trang.status;
 
   if (!trang.ok) {
@@ -86,6 +90,7 @@ export async function quyetDinhNguon(url, { chu_de, fixtures, nguon_id, onLog } 
   // ── Bước D · LỜI GỌI AI THẬT — tiêu chí 3, 4 và phần trích dẫn
   const prompt = p2_chamNguon({
     chu_de,
+    muc_tieu,
     url,
     meta: trang.meta,
     text: trang.text,
@@ -260,27 +265,29 @@ export async function vietCau({ chu_de, muc_tieu, nguoi_hoc, so_cau, nguonList, 
     .filter(n => canUseSource(n) && (n.trang_thai !== 'loai' || n.approved))
     .map(n => ({
       nguon_id: n.nguon_id,
+      url: n.url,
       tieu_de: n.meta?.tieu_de || n.url,
       ngay_dang: n.meta?.ngay_dang || null,
       do_tin_cay: n.do_tin_cay,
       canh_bao: n.canh_bao,
       doan_trich: n.trich_dan,
-      noi_dung_tham_khao: n.trich_dan?.length ? undefined : n.snapshot?.slice(0, 3000),
+      noi_dung_bai_viet: n.snapshot?.slice(0, 6000),
+      media: n.media || [],
     }));
 
   const prompt = p3_vietCau({ chu_de, muc_tieu, nguoi_hoc, so_cau, facts: dungDuoc });
   const ai = await askJson({ ...prompt, stubKey: "default", onLog });
 
-  // Code đối chiếu lại từng đoạn trích: nó có THẬT SỰ nằm trong trich_dan của
-  // đúng nguồn đó không. AI chỉ được tin ở việc gom ý, không được tin ở việc chép.
-  const trichTheoNguon = Object.fromEntries(dungDuoc.map(n => [n.nguon_id, n.doan_trich || []]));
-  const chuan = (x) => String(x).replace(/\s+/g, " ").trim();
+  // Evidence must be an exact substring of the article supplied to the model.
+  const trichTheoNguon = Object.fromEntries(dungDuoc.map(n => [n.nguon_id, n]));
   let soBangChungBiLoai = 0;
   const facts = (ai.facts || []).map(f => {
     const bc = (f.bang_chung || []).filter(b => {
       const kho = trichTheoNguon[b.nguon_id];
       if (!kho) return false;
-      const khop = kho.some(q => chuan(q) === chuan(b.doan_trich));
+      const quote = b.doan_trich;
+      const khop = typeof quote === 'string' && quote.trim().length >= 20 && quote.length <= 1000
+        && ((kho.doan_trich || []).includes(quote) || kho.noi_dung_bai_viet?.includes(quote));
       if (!khop) soBangChungBiLoai++;
       return khop;
     });
@@ -294,6 +301,7 @@ export async function vietCau({ chu_de, muc_tieu, nguoi_hoc, so_cau, nguonList, 
     chu_man_hinh: c.chu_man_hinh || "",
     y_do_hinh: c.y_do_hinh || "",
     fact_ids: Array.isArray(c.fact_ids) ? c.fact_ids : [],
+    media_url: typeof c.media_url === 'string' ? c.media_url : null,
     lich_su: [],
   }));
 

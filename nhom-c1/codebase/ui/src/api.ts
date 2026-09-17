@@ -1,3 +1,4 @@
+export type ResearchMedia = { kind: 'image' | 'video'; url: string };
 export type Source = {
   nguon_id: string;
   url: string;
@@ -12,6 +13,9 @@ export type Source = {
   trich_dan: string[];
   evidence?: { id: string; sourceId: string; snapshotHash?: string; quote: string; start: number; end: number }[];
   snapshot?: string;
+  media?: ResearchMedia[];
+  extraction_method?: string;
+  fetched_at?: string;
   approved: boolean;
   snapshot_hash?: string;
   diem_tieu_chi?: number[];
@@ -24,6 +28,8 @@ export type Sentence = {
   original: string;
   claimIds: string[];
   evidenceIds: string[];
+  sourceIds?: string[];
+  media?: ResearchMedia | null;
   visual?: string;
   seconds?: number;
   needsRewrite?: boolean;

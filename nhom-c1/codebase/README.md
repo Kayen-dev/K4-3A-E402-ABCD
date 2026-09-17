@@ -48,6 +48,12 @@ Máy chủ chỉ bind `127.0.0.1`. Dữ liệu runtime nằm ngoài Git. Phiên 
 
 ## Kết quả và giới hạn hiện tại
 
+Research dùng cả chủ đề và từng mục tiêu học xong, phân bổ kết quả giữa các truy vấn (tối đa 20 nguồn). Mỗi link được tải để lấy nội dung chính, đoạn trích và ảnh/video từ bài viết. Khi HTML không đọc được, hệ thống thử Tavily Extract với key tìm kiếm hiện có. Facebook chỉ đọc được phần công khai mà nhà cung cấp truy xuất được; bài riêng tư hoặc yêu cầu đăng nhập vẫn báo không đọc được. Không coi trang đăng nhập là nội dung nghiên cứu.
+
+Nguồn có nội dung được xếp trước, tiếp theo ưu tiên nguồn có đoạn làm căn cứ. Bước viết nhận nội dung bài viết (tối đa 6.000 ký tự/nguồn) cùng các đoạn trích; bằng chứng mới phải khớp nguyên văn nội dung đã cấp và được lưu cùng vị trí trong snapshot. Mỗi cảnh hiển thị link nguồn, đoạn căn cứ và ảnh/video nếu model chọn media có trong chính nguồn của cảnh. Link media là tài liệu tham khảo, không xác nhận quyền sử dụng. Bản Markdown xuất kèm nguồn và media. Giới hạn snapshot do `SCRAPE_MAX_CHARS` cấu hình, mặc định 12.000 ký tự/nguồn.
+
+Chạy `npm run test:research` để kiểm tra bóc nội dung, đọc dự phòng, mục tiêu tìm kiếm và liên kết nguồn/media với cảnh bằng dữ liệu kiểm thử; bộ này không gọi LLM hoặc dịch vụ tìm kiếm thật.
+
 - Bộ eval fixture: lần chạy `stub` trước đây đạt 28/28; lần chạy `openai` ngày 2026-09-17 đạt 26/28 (92,9%, vượt quality bar 80%). G13 chấm một nguồn đủ tiêu chí thành cảnh báo; G23 giữ thêm một finding từ AI. Verifier BTC: 14/14 điều kiện. Bộ refactor: 10/10 QA case tổng hợp và các kiểm tra vòng đời phiên. Smoke HTTP local đã tạo/đọc/stream review/xóa phiên và list trả về 0. Các nhãn tổng hợp chưa được giảng viên chấm.
 - Môi trường production đã cấu hình key tìm kiếm và LLM, nhưng chưa đo chất lượng chủ đề thật, độ trễ đầu cuối, chi phí token, citation support precision hoặc held-out live 3 lượt. Chưa có kết quả UX từ 5 người dùng mục tiêu.
 - QA không có nguồn chỉ đánh giá văn nói, và ghi rõ chưa kiểm tra tính đúng sai của thông tin. Bản nháp có thể tải khi còn câu cần kiểm tra; nhãn “đã duyệt” chỉ xuất hiện sau quyết định của người dùng.

@@ -121,6 +121,8 @@ export async function actionProject(id, body, emit = () => {}) {
           if (s.evidenceIds.some(id => removedEvidence.has(id))) {
             s.needsRewrite = true;
             s.evidenceIds = s.evidenceIds.filter(id => !removedEvidence.has(id));
+            s.sourceIds = (s.sourceIds || []).filter(id => !removed.has(id));
+            s.media = null;
           }
         });
         const recalculated = gomFact(Object.values(p.claims), eligible(p));
@@ -182,12 +184,13 @@ async function longAction(id, body, emit) {
         ? start.sentences.find(s => s.id === body.sentenceId)?.text.slice(0, 300)
         : start.brief.topic;
       if (!topic) throw fault(400, 'INVALID_SENTENCE', 'Chọn câu cần kiểm chứng');
-      const urls = await searchUrls(topic, controller.signal);
+      const goal = start.mode === 'research' ? start.brief.goal : '';
+      const urls = await searchUrls(topic, goal, controller.signal);
       progress({ type: 'progress', message: `Tìm thấy ${urls.length} tài liệu. Đang đọc...` });
-      result = await assessUrls(urls, topic, progress, controller.signal);
+      result = await assessUrls(urls, topic, goal, progress, controller.signal);
     } else if (body.action === 'add-source') {
       const url = await validatePublicUrl(String(body.url || ''));
-      result = await assessUrls([url], start.brief.topic, progress, controller.signal);
+      result = await assessUrls([url], start.brief.topic, start.brief.goal, progress, controller.signal);
     } else if (body.action === 'generate' || body.action === 'rewrite') {
       if (start.mode !== 'research' || start.sourceApprovalRevision === null || !eligible(start).length) throw fault(400, 'SOURCES_NOT_APPROVED', 'Duyệt ít nhất một tài liệu trước khi viết');
       if (start.sourceApprovalRevision > start.revision) throw fault(409, 'REVISION_CONFLICT', 'Tài liệu đã thay đổi');
@@ -209,20 +212,37 @@ async function longAction(id, body, emit) {
       const p = await getProject(id);
       if (controller.signal.aborted || p.revision !== body.revision || p.run?.id !== runId) throw fault(409, 'STALE_RUN', 'Tác vụ đã bị hủy hoặc dữ liệu đã đổi');
       if (body.action === 'research' || body.action === 'add-source') {
-        const seen = new Set(p.sources.map(s => s.url));
-        for (const s of result) if (!seen.has(s.url)) {
-          const sourceId = randomUUID();
+        for (const s of result) {
+          const existing = p.sources.find(item => item.url === s.url);
+          if (existing?.snapshot && existing.trang_thai !== 'khong-doc-duoc') continue;
+          const sourceId = existing?.nguon_id || randomUUID();
           const evidence = (s.trich_dan || []).map(quote => ({ id: randomUUID(), sourceId, snapshotHash: s.snapshot_hash,
             quote, start: s.snapshot.indexOf(quote), end: s.snapshot.indexOf(quote) + quote.length }));
-          p.sources.push({ ...s, nguon_id: sourceId, evidence, approved: false });
-          seen.add(s.url);
+          const updated = { ...s, nguon_id: sourceId, evidence, approved: false };
+          if (existing) p.sources[p.sources.indexOf(existing)] = updated;
+          else p.sources.push(updated);
         }
         invalidate(p); audit(p, body.action, id, null, p.sources.map(s => s.url));
       } else if (body.action === 'generate' || body.action === 'rewrite') {
         const facts = result.verifiedFacts;
+        for (const fact of Object.values(facts)) for (const proof of fact.bang_chung || []) {
+          const source = p.sources.find(s => s.nguon_id === proof.nguon_id);
+          if (!source || !source.snapshot?.includes(proof.doan_trich)) continue;
+          source.evidence ||= [];
+          if (!source.evidence.some(e => e.quote === proof.doan_trich)) {
+            const offset = source.snapshot.indexOf(proof.doan_trich);
+            source.evidence.push({ id: randomUUID(), sourceId: source.nguon_id, snapshotHash: source.snapshot_hash, quote: proof.doan_trich, start: offset, end: offset + proof.doan_trich.length });
+          }
+        }
         for (const fact of Object.values(facts)) fact.evidenceIds = (fact.bang_chung || []).flatMap(b => p.sources.filter(s => s.nguon_id === b.nguon_id).flatMap(s => (s.evidence || []).filter(e => e.quote === b.doan_trich).map(e => e.id)));
         p.claims = facts;
-        const built = result.cau.map((c, i) => ({ id: `c${i + 1}`, scene: i + 1, text: c.loi, original: c.loi, claimIds: c.fact_ids.filter(x => facts[x]), evidenceIds: c.fact_ids.flatMap(x => facts[x]?.evidenceIds || []), needsVerification: c.fact_ids.some(x => !facts[x] || facts[x].supportStatus !== 'supported'), visual: c.y_do_hinh, seconds: Math.max(4, Math.ceil(c.loi.split(/\s+/).length / 2.5)) }));
+        const built = result.cau.map((c, i) => {
+          const claimIds = c.fact_ids.filter(x => facts[x]);
+          const sourceIds = [...new Set(claimIds.flatMap(x => facts[x]?.bang_chung?.map(b => b.nguon_id) || []))];
+          const referenced = sourceIds.map(sourceId => p.sources.find(s => s.nguon_id === sourceId)).filter(Boolean);
+          const media = referenced.flatMap(s => s.media || []).find(item => item.url === c.media_url);
+          return { id: `c${i + 1}`, scene: i + 1, text: c.loi, original: c.loi, claimIds, sourceIds, evidenceIds: claimIds.flatMap(x => facts[x]?.evidenceIds || []), needsVerification: c.fact_ids.some(x => !facts[x] || facts[x].supportStatus !== 'supported'), visual: c.y_do_hinh, media: media || null, seconds: Math.max(4, Math.ceil(c.loi.split(/\s+/).length / 2.5)) };
+        });
         if (body.action === 'rewrite') { const affected = new Set(p.sentences.filter(s => s.needsRewrite).map(s => s.id)); p.sentences = p.sentences.map((s, i) => affected.has(s.id) ? { ...built[i], id: s.id } : s); }
         else p.sentences = built;
         p.findings = []; p.reviewStatus = 'not-run'; audit(p, body.action, id, null, p.sentences.map(s => s.id));
