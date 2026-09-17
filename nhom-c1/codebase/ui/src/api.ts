@@ -14,6 +14,8 @@ export type Source = {
   snapshot?: string;
   approved: boolean;
   snapshot_hash?: string;
+  diem_tieu_chi?: number[];
+  cach_ly?: string[];
 };
 export type Sentence = {
   id: string;
@@ -34,6 +36,8 @@ export type Finding = {
   start: number;
   end: number;
   category: string;
+  feedbackId?: string | null;
+  feedbackTitle?: string | null;
   severity: string;
   reason: string;
   suggestion: string;
@@ -58,6 +62,7 @@ export type Project = {
   sourceApprovalRevision: number | null;
   approvedRevision: number | null;
   reviewStatus: string;
+  reviewFeedbackIds?: string[];
   run: { status: string; message: string } | null;
   audit: unknown[];
 };
@@ -68,11 +73,56 @@ export type Summary = {
   updatedAt: string;
   revision: number;
 };
+export type User = { email: string; role: "teacher" | "student" };
+export type Feedback = {
+  id: string;
+  title: string;
+  content: string;
+  authorEmail: string;
+  status: "pending" | "approved" | "rejected";
+  createdAt: string;
+  updatedAt: string;
+  reviewedAt: string | null;
+  reviewedBy: string | null;
+};
 
 async function parse(res: Response) {
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Yêu cầu thất bại");
   return data;
+}
+export async function getSession(): Promise<User | null> {
+  return (await parse(await fetch("/api/auth/session"))).user;
+}
+export async function login(email: string, password: string, role: User["role"]): Promise<User> {
+  return (await parse(await fetch("/api/auth/login", {
+    method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({ email, password, role }),
+  }))).user;
+}
+export async function logout(): Promise<void> {
+  await parse(await fetch("/api/auth/logout", { method: "POST" }));
+}
+export async function listFeedback(): Promise<Feedback[]> {
+  return (await parse(await fetch("/api/feedback"))).feedback;
+}
+export async function createFeedback(input: { title: string; content: string }): Promise<Feedback> {
+  return parse(await fetch("/api/feedback", {
+    method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(input),
+  }));
+}
+export async function updateFeedback(id: string, input: { title: string; content: string }): Promise<Feedback> {
+  return parse(await fetch(`/api/feedback/${id}`, {
+    method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(input),
+  }));
+}
+export async function deleteFeedback(id: string): Promise<void> {
+  await parse(await fetch(`/api/feedback/${id}`, { method: "DELETE" }));
+}
+export async function decideFeedback(id: string, decision: "approved" | "rejected"): Promise<Feedback> {
+  return parse(await fetch(`/api/feedback/${id}/decision`, {
+    method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ decision }),
+  }));
 }
 export async function listProjects(): Promise<Summary[]> {
   return (await parse(await fetch("/api/projects"))).projects;

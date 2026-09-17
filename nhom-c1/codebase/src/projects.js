@@ -1,6 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import { readProject, writeProject, listProjectIds, removeProject } from './storage.js';
 import { searchUrls, assessUrls } from './research.js';
+import { canUseSource } from './source-policy.js';
+import { approvedFeedbackForReview } from './feedback.js';
 import { validatePublicUrl } from './scrape.js';
 import { vietCau, gomFact, soatVanNoi, kiemChungClaims } from './pipeline.js';
 
@@ -65,7 +67,7 @@ function splitScript(text) {
 }
 function audit(p, action, target, before, after) { p.audit.push({ at: stamp(), actor: 'user', action, target, revision: p.revision, before, after }); }
 function change(p) { p.revision++; p.updatedAt = stamp(); p.approvedRevision = null; }
-function eligible(p) { return p.sources.filter(s => s.approved && ['dung', 'dung-canh-bao'].includes(s.trang_thai)); }
+function eligible(p) { return p.sources.filter(s => s.approved && canUseSource(s)); }
 function invalidate(p) { p.sourceApprovalRevision = null; p.approvedRevision = null; }
 function normalizeFindings(p, raw) {
   return raw.flatMap((f, i) => {
@@ -75,7 +77,7 @@ function normalizeFindings(p, raw) {
     const start = quote ? sentence.text.indexOf(quote) : 0;
     if (quote && start < 0) return [];
     return [{ id: `f${i + 1}`, sentenceId: sentence.id, revision: p.revision, quote, start, end: quote ? start + quote.length : sentence.text.length,
-      category: f.loai || 'khác', severity: f.sev || 'trung bình', reason: f.vi || '', suggestion: f.goiY || '', replacement: typeof f.thay === 'string' ? f.thay : null,
+      category: f.loai || 'khác', feedbackId: f.feedback_id || null, feedbackTitle: f.feedback_title || null, severity: f.sev || 'trung bình', reason: f.vi || '', suggestion: f.goiY || '', replacement: typeof f.thay === 'string' ? f.thay : null,
       decision: null, originalSentence: sentence.text, previousText: null }];
   });
 }
@@ -110,7 +112,7 @@ export async function actionProject(id, body, emit = () => {}) {
       if (!Array.isArray(selected) || selected.some(x => typeof x !== 'string' || !p.sources.some(s => s.nguon_id === x))) throw fault(400, 'INVALID_SOURCES', 'Danh sách tài liệu không hợp lệ');
       const allowed = new Set(selected);
       const previous = new Set(p.sources.filter(s => s.approved).map(s => s.nguon_id));
-      p.sources.forEach(s => { s.approved = allowed.has(s.nguon_id) && ['dung', 'dung-canh-bao'].includes(s.trang_thai) && s.trich_dan?.length > 0; });
+      p.sources.forEach(s => { s.approved = allowed.has(s.nguon_id) && canUseSource(s); });
       if (!p.sources.some(s => s.approved)) throw fault(400, 'NO_SOURCES', 'Chọn ít nhất một tài liệu có thể dùng');
       const removed = new Set([...previous].filter(x => !allowed.has(x)));
       if (removed.size) {
@@ -199,7 +201,9 @@ async function longAction(id, body, emit) {
       if (!start.sentences.length) throw fault(400, 'NO_SCRIPT', 'Chưa có kịch bản để rà soát');
       const cau = start.sentences.map((s, i) => ({ n: i + 1, loi: s.text, fact_ids: s.claimIds }));
       const approved = new Set(eligible(start).map(s => s.nguon_id));
-      result = await soatVanNoi(cau, start.claims, approved, { boQuaAI: !process.env.LLM_API_KEY || (process.env.LLM_PROVIDER || 'stub') === 'stub' });
+      const reviewedFeedback = await approvedFeedbackForReview();
+      result = await soatVanNoi(cau, start.claims, approved, { boQuaAI: !process.env.LLM_API_KEY || (process.env.LLM_PROVIDER || 'stub') === 'stub', approvedFeedback: reviewedFeedback });
+      result.feedbackIds = reviewedFeedback.map(item => item.id);
     }
     return await locked(id, async () => {
       const p = await getProject(id);
@@ -222,7 +226,7 @@ async function longAction(id, body, emit) {
         if (body.action === 'rewrite') { const affected = new Set(p.sentences.filter(s => s.needsRewrite).map(s => s.id)); p.sentences = p.sentences.map((s, i) => affected.has(s.id) ? { ...built[i], id: s.id } : s); }
         else p.sentences = built;
         p.findings = []; p.reviewStatus = 'not-run'; audit(p, body.action, id, null, p.sentences.map(s => s.id));
-      } else { p.findings = normalizeFindings(p, result.findings); p.reviewStatus = process.env.LLM_API_KEY && (process.env.LLM_PROVIDER || 'stub') !== 'stub' && !result.aiFailed ? 'complete' : 'partial'; audit(p, 'review', id, null, p.findings.length); }
+      } else { p.findings = normalizeFindings(p, result.findings); p.reviewFeedbackIds = result.feedbackIds || []; p.reviewStatus = process.env.LLM_API_KEY && (process.env.LLM_PROVIDER || 'stub') !== 'stub' && !result.aiFailed ? 'complete' : 'partial'; audit(p, 'review', id, null, { findings: p.findings.length, feedbackIds: p.reviewFeedbackIds }); }
       p.run = { id: runId, status: 'complete', action: body.action, message: 'Đã hoàn thành', sequence };
       change(p); if (body.requestId) p.requestIds = [...p.requestIds, String(body.requestId)].slice(-50); await save(p); return p;
     });

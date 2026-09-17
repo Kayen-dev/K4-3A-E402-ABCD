@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertCircle,
   ArrowRight,
@@ -20,6 +20,7 @@ import {
   X,
 } from "lucide-react";
 import { Header } from "./components/Header";
+import { LoginScreen, StudentPortal, TeacherFeedbackPanel } from "./components/RolePortal";
 import { Toast } from "./components/Toast";
 import {
   createProject,
@@ -27,8 +28,12 @@ import {
   getProject,
   listProjects,
   projectAction,
+  getSession,
+  login as loginAccount,
+  logout as logoutAccount,
   type Finding,
   type Project,
+  type User,
   type Source,
   type Summary,
 } from "./api";
@@ -69,13 +74,30 @@ const categoryLabel: Record<string, string> = {
   register: "Giọng văn chưa phù hợp",
   "thieu-can-cu": "Chưa đủ căn cứ",
   "pronunciation-only": "Chỉ ảnh hưởng cách đọc",
+  "gop-y-da-duyet": "Theo góp ý đã duyệt",
 };
 
 function canUseSource(source: Source) {
-  return (
-    ["dung", "dung-canh-bao"].includes(source.trang_thai) &&
-    !!source.trich_dan?.length
-  );
+  if (["dung", "dung-canh-bao"].includes(source.trang_thai)) return true;
+  const scores = source.diem_tieu_chi;
+  return source.trang_thai === "loai" && scores?.[0] === 0 &&
+    scores[3] === 1 && scores[4] === 1 && !!source.snapshot &&
+    !source.cach_ly?.length;
+}
+
+function speechChunks(text: string): string[] {
+  const chunks: string[] = [];
+  let chunk = "";
+  for (const word of text.trim().split(/\s+/)) {
+    if (chunk && `${chunk} ${word}`.length > 180) {
+      chunks.push(chunk);
+      chunk = word;
+    } else {
+      chunk = chunk ? `${chunk} ${word}` : word;
+    }
+  }
+  if (chunk) chunks.push(chunk);
+  return chunks;
 }
 
 function statusLabel(source: Source) {
@@ -83,6 +105,7 @@ function statusLabel(source: Source) {
     return "Có thể dùng";
   }
   if (source.trang_thai === "khong-doc-duoc") return "Không đọc được";
+  if (canUseSource(source)) return "Cần tự kiểm tra";
   if (source.trang_thai === "loai") return "Không nên dùng";
   return "Chưa đánh giá được";
 }
@@ -91,6 +114,7 @@ function statusTone(source: Source) {
   if (source.trang_thai === "dung" || source.trang_thai === "dung-canh-bao") {
     return "border-emerald-200 bg-emerald-50 text-emerald-800";
   }
+  if (canUseSource(source)) return "border-amber-200 bg-amber-50 text-amber-800";
   if (source.trang_thai === "khong-doc-duoc" || source.trang_thai === "loai") {
     return "border-rose-200 bg-rose-50 text-rose-800";
   }
@@ -765,7 +789,7 @@ function ResearchPanel({
       <div className="grid gap-4 lg:grid-cols-[1fr_18rem]">
         <div className="space-y-3">
           {project.sources.length ? (
-            project.sources.map((source, index) => {
+            [...project.sources].sort((a, b) => Number(!!b.trich_dan?.length) - Number(!!a.trich_dan?.length)).map((source, index) => {
               const isUsable = canUseSource(source);
               const isSelected = selected.includes(source.nguon_id) && isUsable;
               return (
@@ -824,7 +848,7 @@ function ResearchPanel({
                       </span>
                     ) : (
                       <span className="text-xs font-semibold text-amber-700">
-                        Chưa có đoạn trích hợp lệ
+                        Chưa có đoạn làm căn cứ · vẫn có thể chọn
                       </span>
                     )}
                   </div>
@@ -846,8 +870,8 @@ function ResearchPanel({
             {checkedUsable}/{usable}
           </p>
           <p className="mt-2 text-sm leading-6 text-slate-600">
-            Chỉ nguồn có đoạn trích hợp lệ mới được dùng để viết kịch bản nhằm
-            giảm hallucination.
+            Có thể chọn nguồn chưa có đoạn trích. Nội dung từ các nguồn này cần
+            kiểm chứng trước khi coi là có dẫn chứng.
           </p>
           <button
             className={`${primary} mt-5 w-full`}
@@ -867,7 +891,7 @@ function ResearchPanel({
   );
 }
 
-export default function App() {
+function TeacherApp({ user, onLogout }: { user: User; onLogout: () => void }) {
   const [project, setProject] = useState<Project | null>(null);
   const [projects, setProjects] = useState<Summary[]>([]);
   const [mode, setMode] = useState<"research" | "qa">("research");
@@ -894,6 +918,10 @@ export default function App() {
   const [toast, setToast] = useState<string | null>(null);
   const [teleprompter, setTeleprompter] = useState(false);
   const [spoken, setSpoken] = useState(false);
+  const [speechError, setSpeechError] = useState("");
+  const speechRun = useRef(0);
+  const currentUtterance = useRef<SpeechSynthesisUtterance | null>(null);
+  const vietnameseVoice = useRef<SpeechSynthesisVoice | null>(null);
 
   const briefReady =
     !!brief.topic.trim() &&
@@ -932,11 +960,25 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    if (!teleprompter || !("speechSynthesis" in window)) return;
+    const updateVoices = () => {
+      vietnameseVoice.current = window.speechSynthesis.getVoices()
+        .find((voice) => voice.lang.toLowerCase().startsWith("vi")) || null;
+    };
+    updateVoices();
+    window.speechSynthesis.addEventListener("voiceschanged", updateVoices);
+    return () => window.speechSynthesis.removeEventListener("voiceschanged", updateVoices);
+  }, [teleprompter]);
+
+  useEffect(() => {
     const close = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setSource(null);
         setTeleprompter(false);
+        speechRun.current++;
         window.speechSynthesis?.cancel();
+        currentUtterance.current = null;
+        setSpoken(false);
       }
     };
     document.addEventListener("keydown", close);
@@ -1108,23 +1150,51 @@ export default function App() {
     }
   }
 
+  function stopReading() {
+    speechRun.current++;
+    window.speechSynthesis?.cancel();
+    currentUtterance.current = null;
+    setSpoken(false);
+  }
+
   function readAloud() {
     if (!project?.sentences.length) return;
-    const voices = window.speechSynthesis?.getVoices() || [];
-    const vi = voices.find((voice) => voice.lang.toLowerCase().startsWith("vi"));
-    if (!vi) {
-      setError("Thiết bị chưa có giọng tiếng Việt. Bạn vẫn có thể đọc thử trên màn hình.");
+    if (!("speechSynthesis" in window) || !("SpeechSynthesisUtterance" in window)) {
+      setSpeechError("Trình duyệt này chưa hỗ trợ đọc thành tiếng.");
       return;
     }
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(
-      project.sentences.map((sentence) => sentence.text).join(" "),
-    );
-    utterance.voice = vi;
-    utterance.lang = "vi-VN";
-    utterance.onend = () => setSpoken(false);
-    window.speechSynthesis.speak(utterance);
+    stopReading();
+    setSpeechError("");
+    const chunks = project.sentences.flatMap((sentence) => speechChunks(sentence.text));
+    const run = ++speechRun.current;
+    let index = 0;
+    const speakNext = () => {
+      if (run !== speechRun.current) return;
+      if (index >= chunks.length) {
+        currentUtterance.current = null;
+        setSpoken(false);
+        return;
+      }
+      const utterance = new SpeechSynthesisUtterance(chunks[index++]);
+      const voice = vietnameseVoice.current || window.speechSynthesis.getVoices()
+        .find((item) => item.lang.toLowerCase().startsWith("vi"));
+      if (voice) utterance.voice = voice;
+      utterance.lang = "vi-VN";
+      utterance.rate = 0.95;
+      utterance.onstart = () => { if (run === speechRun.current) setSpoken(true); };
+      utterance.onend = () => { if (run === speechRun.current) speakNext(); };
+      utterance.onerror = () => {
+        if (run !== speechRun.current) return;
+        currentUtterance.current = null;
+        setSpoken(false);
+        setSpeechError("Không phát được giọng đọc. Hãy kiểm tra âm lượng hoặc giọng tiếng Việt trên thiết bị.");
+      };
+      currentUtterance.current = utterance;
+      window.speechSynthesis.speak(utterance);
+    };
+    window.speechSynthesis.resume();
     setSpoken(true);
+    speakNext();
   }
 
   function findingView(finding: Finding) {
@@ -1139,6 +1209,7 @@ export default function App() {
           <span className="text-xs text-slate-500">Câu {sentence?.scene}</span>
         </div>
         <p><span className="font-semibold">Đoạn nào:</span> {finding.quote || sentence?.text}</p>
+        {finding.feedbackTitle && <p className="text-sm text-indigo-700"><span className="font-semibold">Góp ý đã duyệt:</span> {finding.feedbackTitle}</p>}
         <p><span className="font-semibold">Vì sao:</span> {finding.reason}</p>
         <p><span className="font-semibold">Sửa thành gì:</span> {finding.suggestion || "Cần tự kiểm tra"}</p>
         {finding.replacement && (
@@ -1187,6 +1258,8 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#f6f8fb] text-slate-800">
       <Header
+        userEmail={user.email}
+        onLogout={onLogout}
         onReset={() => {
           setProject(null);
           setStep(1);
@@ -1205,6 +1278,7 @@ export default function App() {
           </div>
         )}
         <LoadingPanel busy={busy} kind={busyKind} message={message} log={progressLog} />
+        <TeacherFeedbackPanel />
 
         {!project && (
           <>
@@ -1288,6 +1362,7 @@ export default function App() {
                     <p className="text-xs font-bold uppercase tracking-[0.18em] text-indigo-600">{project.mode === "research" ? "Bước 3" : "Kết quả rà soát"}</p>
                     <h1 className="mt-1 text-2xl font-black text-slate-950">Kịch bản nháp</h1>
                     <p className="mt-1 text-sm text-slate-600">Đọc từng cảnh, mở nguồn để kiểm tra căn cứ, rồi chạy rà soát trước khi duyệt.</p>
+                    {project.mode === "qa" && project.reviewFeedbackIds && <p className="mt-1 text-xs font-semibold text-indigo-700">Lượt rà soát này đã nhận {project.reviewFeedbackIds.length} góp ý được duyệt.</p>}
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {project.mode === "research" && <button className={secondary} onClick={() => setStep(2)}>Chọn lại tài liệu</button>}
@@ -1388,14 +1463,30 @@ export default function App() {
           <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-[2rem] bg-slate-900 p-8 text-white">
             <div className="flex justify-between gap-3">
               <h2 className="text-xl font-black">Đọc thử kịch bản</h2>
-              <button aria-label="Đóng" onClick={() => { setTeleprompter(false); window.speechSynthesis?.cancel(); }}><X /></button>
+              <button aria-label="Đóng" onClick={() => { stopReading(); setTeleprompter(false); }}><X /></button>
             </div>
             <div className="mt-6 space-y-5 text-2xl leading-relaxed">{project.sentences.map((sentence) => <p key={sentence.id}>{sentence.text}</p>)}</div>
-            <button className={`${primary} mt-6`} onClick={() => spoken ? (window.speechSynthesis.cancel(), setSpoken(false)) : readAloud()}>{spoken ? "Dừng đọc" : "Nghe giọng Việt"}</button>
+            <button className={`${primary} mt-6`} onClick={() => spoken ? stopReading() : readAloud()}>{spoken ? "Dừng đọc" : "Nghe giọng Việt"}</button>
+            {speechError && <p role="alert" className="mt-3 text-sm text-amber-200">{speechError}</p>}
           </div>
         </div>
       )}
       <Toast message={toast} />
     </div>
   );
+}
+
+export default function App() {
+  const [user, setUser] = useState<User | null>(null);
+  const [checkingSession, setCheckingSession] = useState(true);
+  useEffect(() => {
+    getSession().then(setUser).catch(() => setUser(null)).finally(() => setCheckingSession(false));
+  }, []);
+  const signOut = async () => {
+    await logoutAccount().catch(() => {});
+    setUser(null);
+  };
+  if (checkingSession) return <div className="flex min-h-screen items-center justify-center bg-[#f6f8fb] text-sm font-semibold text-slate-600">Đang kiểm tra đăng nhập...</div>;
+  if (!user) return <LoginScreen onLogin={async (email, password, role) => { setUser(await loginAccount(email, password, role)); }} />;
+  return user.role === "teacher" ? <TeacherApp user={user} onLogout={signOut} /> : <StudentPortal user={user} onLogout={signOut} />;
 }

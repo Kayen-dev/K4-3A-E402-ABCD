@@ -5,6 +5,8 @@ import { join, dirname, extname, normalize, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createProject, getProject, listProjects, deleteProject, actionProject } from './src/projects.js';
 import { provider } from './src/llm.js';
+import { login, currentUser, requireRole, sessionCookie, clearSessionCookie } from './src/auth.js';
+import { listFeedback, createFeedback, updateFeedback, deleteFeedback, decideFeedback } from './src/feedback.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const STATIC = join(HERE, 'ui', 'dist');
@@ -20,13 +22,42 @@ export async function handleRequest(req, res) {
   try {
     const url = new URL(req.url, 'http://localhost');
     if (url.pathname === '/api/status' && req.method === 'GET') return json(res, 200, { provider: provider(), searchConfigured: !!process.env.TAVILY_API_KEY, llmConfigured: !!process.env.LLM_API_KEY && provider() !== 'stub' });
+    const secureCookie = !!process.env.VERCEL || req.headers['x-forwarded-proto'] === 'https';
+    if (url.pathname === '/api/auth/session' && req.method === 'GET') return json(res, 200, { user: currentUser(req) });
+    if (url.pathname === '/api/auth/login' && req.method === 'POST') {
+      const input = await body(req);
+      const user = login(input.email, input.password, input.role);
+      res.setHeader('set-cookie', sessionCookie(user, secureCookie));
+      return json(res, 200, { user });
+    }
+    if (url.pathname === '/api/auth/logout' && req.method === 'POST') {
+      res.setHeader('set-cookie', clearSessionCookie(secureCookie));
+      return json(res, 200, { user: null });
+    }
+    if (url.pathname === '/api/feedback') {
+      const user = requireRole(req);
+      if (req.method === 'GET') return json(res, 200, { feedback: await listFeedback(user) });
+      if (req.method === 'POST') return json(res, 201, await createFeedback(user, await body(req)));
+      return json(res, 405, { code: 'METHOD_NOT_ALLOWED', message: 'Phương thức không được hỗ trợ' });
+    }
+    const feedbackMatch = /^\/api\/feedback\/([a-f0-9-]{36})(?:\/(decision))?$/.exec(url.pathname);
+    if (feedbackMatch) {
+      const user = requireRole(req);
+      const id = feedbackMatch[1];
+      if (feedbackMatch[2] && req.method === 'POST') return json(res, 200, await decideFeedback(user, id, (await body(req)).decision));
+      if (!feedbackMatch[2] && req.method === 'PUT') return json(res, 200, await updateFeedback(user, id, await body(req)));
+      if (!feedbackMatch[2] && req.method === 'DELETE') return json(res, 200, await deleteFeedback(user, id));
+      return json(res, 405, { code: 'METHOD_NOT_ALLOWED', message: 'Phương thức không được hỗ trợ' });
+    }
     if (url.pathname === '/api/projects') {
+      requireRole(req, 'teacher');
       if (req.method === 'GET') return json(res, 200, { projects: await listProjects() });
       if (req.method === 'POST') return json(res, 201, await createProject(await body(req)));
       return json(res, 405, { code: 'METHOD_NOT_ALLOWED', message: 'Phương thức không được hỗ trợ' });
     }
     const match = /^\/api\/projects\/([a-f0-9-]{36})(?:\/(action))?$/.exec(url.pathname);
     if (match) {
+      requireRole(req, 'teacher');
       const id = match[1];
       if (!match[2] && req.method === 'GET') return json(res, 200, await getProject(id));
       if (!match[2] && req.method === 'DELETE') return json(res, 200, await deleteProject(id));

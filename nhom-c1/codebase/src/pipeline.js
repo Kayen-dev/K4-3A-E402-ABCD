@@ -19,6 +19,7 @@
 
 import { scrape } from "./scrape.js";
 import { createHash } from "node:crypto";
+import { canUseSource } from "./source-policy.js";
 import { askJson } from "./llm.js";
 import { p1_truyVan, p2_chamNguon, p3_vietCau, p4_soatVanNoi, p5_kiemChung } from "./prompts.js";
 import {
@@ -147,7 +148,7 @@ export async function quyetDinhNguon(url, { chu_de, fixtures, nguon_id, onLog } 
    ═══════════════════════════════════════════════════════════════════ */
 
 export function gomFact(facts, nguonList) {
-  const dangDung = new Set(nguonList.filter(n => n.trang_thai?.startsWith("dung")).map(n => n.nguon_id));
+  const dangDung = new Set(nguonList.filter(n => canUseSource(n) && (n.trang_thai !== 'loai' || n.approved)).map(n => n.nguon_id));
   const out = {};
   for (const f of facts) {
     const soNguon = demNguonDocLap(f, dangDung);
@@ -186,7 +187,7 @@ export async function kiemChungClaims(factsById) {
    SOÁT VĂN NÓI  (code + AI 4)
    ═══════════════════════════════════════════════════════════════════ */
 
-export async function soatVanNoi(cauList, factsById, dangDung, { boQuaAI = false, onLog } = {}) {
+export async function soatVanNoi(cauList, factsById, dangDung, { boQuaAI = false, approvedFeedback = [], onLog } = {}) {
   const findings = [];
 
   // ── phần CODE: câu dài · xưng hô · claim thiếu căn cứ
@@ -216,13 +217,14 @@ export async function soatVanNoi(cauList, factsById, dangDung, { boQuaAI = false
   let aiFailed = false;
   if (!boQuaAI) {
     try {
-      const prompt = p4_soatVanNoi({ cauList });
+      const prompt = p4_soatVanNoi({ cauList, approvedFeedback });
       const ai = await askJson({ ...prompt, stubKey: "default", onLog });
       for (const f of ai.findings || []) {
-        if (!f || !["sai-nghia", "translationese", "sai-sac-thai", "register"].includes(f.loai) ||
+        if (!f || !["sai-nghia", "translationese", "sai-sac-thai", "register", "gop-y-da-duyet"].includes(f.loai) ||
             !["cao", "trung bình", "thấp"].includes(f.sev) || typeof f.quote !== "string" ||
             f.quote.length < 2 || f.quote.length > 400 || typeof f.vi !== "string" || f.vi.length > 1000 ||
-            (f.thay !== null && (typeof f.thay !== "string" || f.thay.length > 400))) {
+            (f.thay !== null && (typeof f.thay !== "string" || f.thay.length > 400)) ||
+            (f.loai === "gop-y-da-duyet" && !approvedFeedback.some(item => item.id === f.feedback_id))) {
           boFinding.push({ vi_sao_bo: "đầu ra không đúng schema" }); continue;
         }
         let soCau = Number.isInteger(f.n) ? f.n : (Number.isInteger(f.cau) ? f.cau : null);
@@ -234,7 +236,8 @@ export async function soatVanNoi(cauList, factsById, dangDung, { boQuaAI = false
         if (!cau) { boFinding.push({ ...f, vi_sao_bo: "số câu không tồn tại" }); continue; }
         // indexOf: không tìm thấy chuỗi nguyên văn → VỨT. Ưu tiên precision.
         const { giu, bo } = locFindingHopLe(cau, [{ ...f, n: soCau, cau: soCau }]);
-        giu.forEach(x => findings.push({ ...x, nguon_bat: "ai" }));
+        giu.forEach(x => findings.push({ ...x, feedback_id: f.feedback_id || null,
+          feedback_title: approvedFeedback.find(item => item.id === f.feedback_id)?.title || null, nguon_bat: "ai" }));
         bo.forEach(x => boFinding.push({ ...x, vi_sao_bo: "quote không khớp nguyên văn câu" }));
       }
     } catch (e) {
@@ -251,10 +254,10 @@ export async function soatVanNoi(cauList, factsById, dangDung, { boQuaAI = false
    ═══════════════════════════════════════════════════════════════════ */
 
 export async function vietCau({ chu_de, muc_tieu, nguoi_hoc, so_cau, nguonList, onLog }) {
-  // CHỈ nguồn đang dùng. Nguồn bị loại — nhất là nguồn có chỉ thị ẩn — không bao giờ
-  // được vào context của bước viết. cach_ly ở lại trong object nguồn, chỉ UI đọc.
+  // Chỉ nguồn được phép dùng. Nguồn thiếu tác giả chỉ vào context khi đã được
+  // người dùng duyệt; nội dung có chỉ thị ẩn luôn ở ngoài prompt.
   const dungDuoc = nguonList
-    .filter(n => n.trang_thai?.startsWith("dung"))
+    .filter(n => canUseSource(n) && (n.trang_thai !== 'loai' || n.approved))
     .map(n => ({
       nguon_id: n.nguon_id,
       tieu_de: n.meta?.tieu_de || n.url,
@@ -262,6 +265,7 @@ export async function vietCau({ chu_de, muc_tieu, nguoi_hoc, so_cau, nguonList, 
       do_tin_cay: n.do_tin_cay,
       canh_bao: n.canh_bao,
       doan_trich: n.trich_dan,
+      noi_dung_tham_khao: n.trich_dan?.length ? undefined : n.snapshot?.slice(0, 3000),
     }));
 
   const prompt = p3_vietCau({ chu_de, muc_tieu, nguoi_hoc, so_cau, facts: dungDuoc });
