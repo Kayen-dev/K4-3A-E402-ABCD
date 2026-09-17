@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --port=3000 --host=127.0.0.1",
-    "build": "vite build",
+    "build": "node scripts/check-encoding.mjs && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit"
   },

@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   AlertCircle,
   ArrowRight,
@@ -60,15 +60,15 @@ type BriefForm = {
 };
 
 const categoryLabel: Record<string, string> = {
-  "xung-ho": "XÆ°ng hÃ´ chÆ°a thá»‘ng nháº¥t",
-  "cau-dai": "CÃ¢u quÃ¡ dÃ i",
-  "lap-filler": "Láº·p tá»« hoáº·c tá»« Ä‘á»‡m",
-  translationese: "CÃ¡ch diá»…n Ä‘áº¡t gÆ°á»£ng",
-  "sai-nghia": "CÃ³ thá»ƒ sai nghÄ©a",
-  "sai-sac-thai": "Sáº¯c thÃ¡i chÆ°a phÃ¹ há»£p",
-  register: "Giá»ng vÄƒn chÆ°a phÃ¹ há»£p",
-  "thieu-can-cu": "ChÆ°a Ä‘á»§ cÄƒn cá»©",
-  "pronunciation-only": "Chá»‰ áº£nh hÆ°á»Ÿng cÃ¡ch Ä‘á»c",
+  "xung-ho": "Xưng hô chưa thống nhất",
+  "cau-dai": "Câu quá dài",
+  "lap-filler": "Lặp từ hoặc từ đệm",
+  translationese: "Cách diễn đạt gượng",
+  "sai-nghia": "Có thể sai nghĩa",
+  "sai-sac-thai": "Sắc thái chưa phù hợp",
+  register: "Giọng văn chưa phù hợp",
+  "thieu-can-cu": "Chưa đủ căn cứ",
+  "pronunciation-only": "Chỉ ảnh hưởng cách đọc",
 };
 
 function canUseSource(source: Source) {
@@ -80,11 +80,11 @@ function canUseSource(source: Source) {
 
 function statusLabel(source: Source) {
   if (source.trang_thai === "dung" || source.trang_thai === "dung-canh-bao") {
-    return "CÃ³ thá»ƒ dÃ¹ng";
+    return "Có thể dùng";
   }
-  if (source.trang_thai === "khong-doc-duoc") return "KhÃ´ng Ä‘á»c Ä‘Æ°á»£c";
-  if (source.trang_thai === "loai") return "KhÃ´ng nÃªn dÃ¹ng";
-  return "ChÆ°a Ä‘Ã¡nh giÃ¡ Ä‘Æ°á»£c";
+  if (source.trang_thai === "khong-doc-duoc") return "Không đọc được";
+  if (source.trang_thai === "loai") return "Không nên dùng";
+  return "Chưa đánh giá được";
 }
 
 function statusTone(source: Source) {
@@ -113,20 +113,20 @@ function exportMarkdown(project: Project) {
       .length +
     project.findings.filter((f) => f.severity === "cao" && !f.decision).length;
   return [
-    `# ${project.brief.topic || "Ká»‹ch báº£n"}`,
+    `# ${project.brief.topic || "Kịch bản"}`,
     "",
     approved
-      ? "Báº£n Ä‘Ã£ duyá»‡t"
-      : `Báº£n nhÃ¡p â€” cÃ²n ${pending} chá»— cáº§n kiá»ƒm tra`,
+      ? "Bản đã duyệt"
+      : `Bản nháp — còn ${pending} chỗ cần kiểm tra`,
     "",
     ...project.sentences.flatMap((sentence) => [
-      `## Cáº£nh ${sentence.scene} Â· ${sentence.seconds || 0} giÃ¢y (Æ°á»›c tÃ­nh)`,
+      `## Cảnh ${sentence.scene} · ${sentence.seconds || 0} giây (ước tính)`,
       "",
-      `Lá»i Ä‘á»c: ${sentence.text}`,
+      `Lời đọc: ${sentence.text}`,
       "",
-      `Gá»£i Ã½ hÃ¬nh: ${sentence.visual || "ChÆ°a cÃ³"}`,
+      `Gợi ý hình: ${sentence.visual || "Chưa có"}`,
       "",
-      `Nguá»“n: ${
+      `Nguồn: ${
         sentence.evidenceIds
           .map((id) =>
             project.sources
@@ -135,30 +135,30 @@ function exportMarkdown(project: Project) {
                   .filter((evidence) => evidence.id === id)
                   .map(
                     (evidence) =>
-                      `${source.meta?.tieu_de || source.url} (${source.url}) â€” â€œ${evidence.quote}â€`,
+                      `${source.meta?.tieu_de || source.url} (${source.url}) — "${evidence.quote}"`,
                   ),
               )
               .join("; "),
           )
           .filter(Boolean)
-          .join("; ") || "ChÆ°a kiá»ƒm chá»©ng"
+          .join("; ") || "Chưa kiểm chứng"
       }`,
       "",
     ]),
-    "## Há»“ sÆ¡ nguá»“n",
+    "## Hồ sơ nguồn",
     "",
     ...project.sources
       .filter((source) => source.approved)
       .flatMap((source) => [
-        `- ${source.meta?.tieu_de || source.url} â€” ${source.url}`,
-        `  - TÃ¡c giáº£/tá»• chá»©c: ${source.meta?.tac_gia || source.meta?.to_chuc || "KhÃ´ng xÃ¡c Ä‘á»‹nh"}`,
-        `  - Äoáº¡n lÃ m cÄƒn cá»©: ${source.trich_dan.join(" | ") || "ChÆ°a cÃ³"}`,
+        `- ${source.meta?.tieu_de || source.url} — ${source.url}`,
+        `  - Tác giả/tổ chức: ${source.meta?.tac_gia || source.meta?.to_chuc || "Không xác định"}`,
+        `  - Đoạn làm căn cứ: ${source.trich_dan.join(" | ") || "Chưa có"}`,
       ]),
     "",
-    "## Tráº¡ng thÃ¡i kiá»ƒm tra",
+    "## Trạng thái kiểm tra",
     "",
-    `RÃ  soÃ¡t: ${project.reviewStatus}`,
-    `PhiÃªn báº£n: ${project.revision}`,
+    `Rà soát: ${project.reviewStatus}`,
+    `Phiên bản: ${project.revision}`,
   ].join("\n");
 }
 
@@ -215,14 +215,14 @@ function LoadingPanel({
   if (!busy) return null;
   const title =
     kind === "generate"
-      ? "Äang viáº¿t ká»‹ch báº£n tá»« tÃ i liá»‡u Ä‘Ã£ chá»n"
+      ? "Đang viết kịch bản từ tài liệu đã chọn"
       : kind === "review"
-        ? "Äang rÃ  soÃ¡t ká»‹ch báº£n"
+        ? "Đang rà soát kịch bản"
         : kind === "rewrite"
-          ? "Äang viáº¿t láº¡i pháº§n bá»‹ áº£nh hÆ°á»Ÿng"
+          ? "Đang viết lại phần bị ảnh hưởng"
           : kind === "research" || kind === "add-source"
-            ? "Äang research vÃ  Ä‘á»c tÃ i liá»‡u"
-            : "Äang lÆ°u thay Ä‘á»•i";
+            ? "Đang research và đọc tài liệu"
+            : "Đang lưu thay đổi";
   return (
     <section
       role="status"
@@ -238,7 +238,7 @@ function LoadingPanel({
             <p className="text-sm font-bold text-slate-950">{title}</p>
             <p className="mt-1 text-sm text-slate-600">
               {message ||
-                "Há»‡ thá»‘ng Ä‘ang xá»­ lÃ½. Báº¡n cÃ³ thá»ƒ theo dÃµi tá»«ng bÆ°á»›c bÃªn dÆ°á»›i."}
+                "Hệ thống đang xử lý. Bạn có thể theo dõi từng bước bên dưới."}
             </p>
           </div>
         </div>
@@ -250,22 +250,22 @@ function LoadingPanel({
         <ProgressPill
           active={kind === "research" || kind === "add-source"}
           done={kind !== "research" && kind !== "add-source"}
-          label="TÃ¬m nguá»“n"
+          label="Tìm nguồn"
         />
         <ProgressPill
           active={kind === "research" || kind === "add-source"}
           done={kind === "generate" || kind === "review" || kind === "rewrite"}
-          label="Äá»c & cháº¥m nguá»“n"
+          label="Đọc & chấm nguồn"
         />
         <ProgressPill
           active={kind === "generate" || kind === "review" || kind === "rewrite"}
-          label="Táº¡o káº¿t quáº£"
+          label="Tạo kết quả"
         />
       </div>
       {log.length > 0 && (
         <div className="border-t border-slate-100 px-5 pb-5">
           <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-slate-400">
-            Tiáº¿n trÃ¬nh vá»«a nháº­n
+            Tiến trình vừa nhận
           </p>
           <ol className="space-y-2 text-sm text-slate-600">
             {log.slice(-5).map((item, index) => (
@@ -296,12 +296,12 @@ function LandingPage({
             <Sparkles className="size-4" /> ScriptScout
           </div>
           <h1 className="font-heading text-4xl font-black tracking-tight text-slate-950 sm:text-5xl">
-            Viáº¿t ká»‹ch báº£n bÃ i giáº£ng cÃ³ nguá»“n, dá»… duyá»‡t, Ã­t áº£o tÆ°á»Ÿng.
+            Viết kịch bản bài giảng có nguồn, dễ duyệt, ít ảo tưởng.
           </h1>
           <p className="mt-5 max-w-2xl text-base leading-7 text-slate-600">
-            Nháº­p bÃ i há»c, Ä‘á»ƒ há»‡ thá»‘ng research tÃ i liá»‡u, chá»n nguá»“n Ä‘Ã¡ng tin,
-            rá»“i táº¡o ká»‹ch báº£n cÃ³ dáº«n chá»©ng theo tá»«ng cÃ¢u. Giáº£ng viÃªn cÃ³ thá»ƒ xem
-            láº¡i nguá»“n, sá»­a cÃ¢u vÃ  táº£i há»“ sÆ¡ kiá»ƒm chá»©ng.
+            Nhập bài học, để hệ thống research tài liệu, chọn nguồn đáng tin,
+            rồi tạo kịch bản có dẫn chứng theo từng câu. Giảng viên có thể xem
+            lại nguồn, sửa câu và tải hồ sơ kiểm chứng.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <button
@@ -312,26 +312,26 @@ function LandingPage({
                   ?.scrollIntoView({ behavior: "smooth", block: "start" })
               }
             >
-              Báº¯t Ä‘áº§u soáº¡n bÃ i <ArrowRight className="size-4" />
+              Bắt đầu soạn bài <ArrowRight className="size-4" />
             </button>
             <button className={secondary} onClick={() => setMode("qa")}>
-              RÃ  soÃ¡t ká»‹ch báº£n cÃ³ sáºµn
+              Rà soát kịch bản có sẵn
             </button>
           </div>
         </div>
         <div className="rounded-[1.75rem] border border-white/70 bg-white/80 p-4 shadow-xl shadow-slate-900/10 backdrop-blur">
           <div className="rounded-[1.4rem] border border-slate-200 bg-slate-950 p-4 text-white">
             <div className="mb-5 flex items-center justify-between">
-              <span className="text-sm font-semibold">Luá»“ng lÃ m viá»‡c</span>
+              <span className="text-sm font-semibold">Luồng làm việc</span>
               <span className="rounded-full bg-emerald-400/15 px-2.5 py-1 text-xs font-semibold text-emerald-200">
                 Live research
               </span>
             </div>
             {[
-              ["01", "Nháº­p bÃ i há»c", "Chá»§ Ä‘á», má»¥c tiÃªu, ngÆ°á»i há»c, thá»i lÆ°á»£ng"],
-              ["02", "Research tÃ i liá»‡u", "Theo dÃµi Ä‘Ã£ Ä‘á»c Ä‘áº¿n Ä‘Ã¢u, thÃªm URL náº¿u cáº§n"],
-              ["03", "Chá»n nguá»“n", "Tick tÃ i liá»‡u dÃ¹ng Ä‘á»ƒ viáº¿t ká»‹ch báº£n"],
-              ["04", "Duyá»‡t káº¿t quáº£", "RÃ  soÃ¡t, sá»­a cÃ¢u, táº£i markdown"],
+              ["01", "Nhập bài học", "Chủ đề, mục tiêu, người học, thời lượng"],
+              ["02", "Research tài liệu", "Theo dõi đã đọc đến đâu, thêm URL nếu cần"],
+              ["03", "Chọn nguồn", "Tick tài liệu dùng để viết kịch bản"],
+              ["04", "Duyệt kết quả", "Rà soát, sửa câu, tải markdown"],
             ].map(([n, title, desc]) => (
               <div
                 key={n}
@@ -361,9 +361,9 @@ function LandingPage({
           onClick={() => setMode("research")}
         >
           <BookOpen className="mb-3 size-5 text-indigo-600" />
-          <strong>TÃ¬m nguá»“n vÃ  viáº¿t</strong>
+          <strong>Tìm nguồn và viết</strong>
           <p className="mt-1 text-sm text-slate-600">
-            PhÃ¹ há»£p khi chÆ°a cÃ³ ká»‹ch báº£n.
+            Phù hợp khi chưa có kịch bản.
           </p>
         </button>
         <button
@@ -375,16 +375,16 @@ function LandingPage({
           onClick={() => setMode("qa")}
         >
           <FileCheck className="mb-3 size-5 text-indigo-600" />
-          <strong>RÃ  soÃ¡t báº£n cÃ³ sáºµn</strong>
+          <strong>Rà soát bản có sẵn</strong>
           <p className="mt-1 text-sm text-slate-600">
-            DÃ¡n lá»i Ä‘á»c Ä‘á»ƒ kiá»ƒm tra vÄƒn nÃ³i.
+            Dán lời đọc để kiểm tra văn nói.
           </p>
         </button>
         <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
           <ClipboardCheck className="mb-3 size-5 text-slate-700" />
-          <strong>Xuáº¥t há»“ sÆ¡ nguá»“n</strong>
+          <strong>Xuất hồ sơ nguồn</strong>
           <p className="mt-1 text-sm text-slate-600">
-            Táº£i markdown vÃ  audit JSON sau khi duyá»‡t.
+            Tải markdown và audit JSON sau khi duyệt.
           </p>
         </div>
       </div>
@@ -419,26 +419,26 @@ function LessonForm({
       <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-indigo-600">
-            BÆ°á»›c 1
+            Bước 1
           </p>
           <h2 className="mt-1 text-2xl font-black text-slate-950">
             {mode === "research"
-              ? "Nháº­p bÃ i há»c"
-              : "DÃ¡n ká»‹ch báº£n cáº§n rÃ  soÃ¡t"}
+              ? "Nhập bài học"
+              : "Dán kịch bản cần rà soát"}
           </h2>
           <p className="mt-1 text-sm text-slate-600">
             {mode === "research"
-              ? "CÃ ng rÃµ má»¥c tiÃªu vÃ  ngÆ°á»i há»c, tÃ i liá»‡u tÃ¬m Ä‘Æ°á»£c cÃ ng sÃ¡t vá»›i bÃ i giáº£ng."
-              : "Má»—i dÃ²ng nÃªn lÃ  má»™t cÃ¢u hoáº·c má»™t cáº£nh Ä‘á»ƒ gÃ³p Ã½ dá»… Ä‘á»c hÆ¡n."}
+              ? "Càng rõ mục tiêu và người học, tài liệu tìm được càng sát với bài giảng."
+              : "Mỗi dòng nên là một câu hoặc một cảnh để góp ý dễ đọc hơn."}
           </p>
         </div>
         {mode === "research" && (
           <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
             <span className="font-bold text-slate-900">
-              {briefReady ? "ÄÃ£ Ä‘á»§ thÃ´ng tin" : "CÃ²n thiáº¿u thÃ´ng tin"}
+              {briefReady ? "Đã đủ thông tin" : "Còn thiếu thông tin"}
             </span>
             <br />
-            Cáº§n chá»§ Ä‘á», má»¥c tiÃªu, ngÆ°á»i há»c vÃ  1â€“120 phÃºt.
+            Cần chủ đề, mục tiêu, người học và 1–120 phút.
           </div>
         )}
       </div>
@@ -446,14 +446,14 @@ function LessonForm({
         <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
           <label className="lg:col-span-2">
             <span className="mb-2 block text-sm font-bold text-slate-800">
-              Chá»§ Ä‘á» bÃ i há»c
+              Chủ đề bài học
             </span>
             <input
               className={input}
               value={brief.topic}
               required
               maxLength={300}
-              placeholder="VÃ­ dá»¥: Ká»¹ nÄƒng pháº£n há»“i trong lá»›p há»c trá»±c tuyáº¿n"
+              placeholder="Ví dụ: Kỹ năng phản hồi trong lớp học trực tuyến"
               onChange={(event) =>
                 setBrief({ ...brief, topic: event.target.value })
               }
@@ -461,14 +461,14 @@ function LessonForm({
           </label>
           <label>
             <span className="mb-2 block text-sm font-bold text-slate-800">
-              Má»¥c tiÃªu há»c xong
+              Mục tiêu học xong
             </span>
             <textarea
               className={`${input} min-h-32`}
               value={brief.goal}
               required
               maxLength={2000}
-              placeholder="Sau bÃ i há»c, ngÆ°á»i há»c cÃ³ thá»ƒ..."
+              placeholder="Sau bài học, người học có thể..."
               onChange={(event) =>
                 setBrief({ ...brief, goal: event.target.value })
               }
@@ -477,14 +477,14 @@ function LessonForm({
           <div className="grid gap-4">
             <label>
               <span className="mb-2 block text-sm font-bold text-slate-800">
-                NgÆ°á»i há»c
+                Người học
               </span>
               <input
                 className={input}
                 value={brief.audience}
                 required
                 maxLength={300}
-                placeholder="VÃ­ dá»¥: Sinh viÃªn nÄƒm 2, giÃ¡o viÃªn má»›i..."
+                placeholder="Ví dụ: Sinh viên năm 2, giáo viên mới..."
                 onChange={(event) =>
                   setBrief({ ...brief, audience: event.target.value })
                 }
@@ -492,7 +492,7 @@ function LessonForm({
             </label>
             <label>
               <span className="mb-2 block text-sm font-bold text-slate-800">
-                Thá»i lÆ°á»£ng
+                Thời lượng
               </span>
               <div className="relative">
                 <input
@@ -507,7 +507,7 @@ function LessonForm({
                   }
                 />
                 <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-slate-400">
-                  phÃºt
+                  phút
                 </span>
               </div>
             </label>
@@ -516,13 +516,13 @@ function LessonForm({
       ) : (
         <label className="block">
           <span className="mb-2 block text-sm font-bold text-slate-800">
-            Lá»i Ä‘á»c / ká»‹ch báº£n
+            Lời đọc / kịch bản
           </span>
           <textarea
             className={`${input} min-h-72`}
             value={script}
             maxLength={30000}
-            placeholder="DÃ¡n ká»‹ch báº£n táº¡i Ä‘Ã¢y..."
+            placeholder="Dán kịch bản tại đây..."
             onChange={(event) => setScript(event.target.value)}
           />
         </label>
@@ -533,7 +533,7 @@ function LessonForm({
           disabled={busy || (mode === "research" ? !briefReady : !script.trim())}
           title={
             mode === "research" && !briefReady
-              ? "Äiá»n Ä‘á»§ chá»§ Ä‘á», má»¥c tiÃªu, ngÆ°á»i há»c vÃ  thá»i lÆ°á»£ng tá»« 1 Ä‘áº¿n 120 phÃºt"
+              ? "Điền đủ chủ đề, mục tiêu, người học và thời lượng từ 1 đến 120 phút"
               : ""
           }
           onClick={onSubmit}
@@ -543,12 +543,12 @@ function LessonForm({
           ) : (
             <FileCheck className="size-4" />
           )}
-          {mode === "research" ? "TÃ¬m tÃ i liá»‡u" : "Xem gÃ³p Ã½"}
+          {mode === "research" ? "Tìm tài liệu" : "Xem góp ý"}
         </button>
         <p className="text-sm text-slate-500">
           {mode === "research"
-            ? "Sau khi tÃ¬m xong, báº¡n sáº½ chá»n tÃ i liá»‡u dÃ¹ng Ä‘á»ƒ viáº¿t ká»‹ch báº£n."
-            : "Káº¿t quáº£ sáº½ hiá»ƒn thá»‹ theo tá»«ng cÃ¢u Ä‘á»ƒ báº¡n duyá»‡t nhanh."}
+            ? "Sau khi tìm xong, bạn sẽ chọn tài liệu dùng để viết kịch bản."
+            : "Kết quả sẽ hiển thị theo từng câu để bạn duyệt nhanh."}
         </p>
       </div>
     </section>
@@ -566,9 +566,9 @@ function ProjectsList({
 }) {
   return (
     <section className={card}>
-      <h2 className="font-bold text-slate-950">Má»Ÿ láº¡i phiÃªn lÃ m viá»‡c</h2>
+      <h2 className="font-bold text-slate-950">Mở lại phiên làm việc</h2>
       <p className="mt-1 text-sm text-slate-500">
-        Tiáº¿p tá»¥c tá»« phiÃªn Ä‘Ã£ lÆ°u trÃªn mÃ¡y chá»§.
+        Tiếp tục từ phiên đã lưu trên máy chủ.
       </p>
       {projects.length ? (
         <ul className="mt-4 divide-y divide-slate-100">
@@ -582,7 +582,7 @@ function ProjectsList({
                   {project.title}
                 </span>
                 <span className="text-xs text-slate-500">
-                  {new Date(project.updatedAt).toLocaleString("vi-VN")} Â· v
+                  {new Date(project.updatedAt).toLocaleString("vi-VN")} · v
                   {project.revision}
                 </span>
               </button>
@@ -590,14 +590,14 @@ function ProjectsList({
                 className="text-sm font-semibold text-rose-600 hover:underline"
                 onClick={() => remove(project.id)}
               >
-                XÃ³a
+                Xóa
               </button>
             </li>
           ))}
         </ul>
       ) : (
         <div className="mt-4 rounded-2xl bg-slate-50 p-4 text-sm text-slate-500">
-          ChÆ°a cÃ³ phiÃªn nÃ o. Táº¡o bÃ i há»c má»›i Ä‘á»ƒ báº¯t Ä‘áº§u.
+          Chưa có phiên nào. Tạo bài học mới để bắt đầu.
         </div>
       )}
     </section>
@@ -672,15 +672,15 @@ function ResearchPanel({
         >
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-indigo-600">
-              BÆ°á»›c 2 Â· Research
+              Bước 2 · Research
             </p>
             <h1 className="mt-1 text-2xl font-black text-slate-950">
-              ÄÃ£ Ä‘á»c {readCount}/{Math.max(project.sources.length, readCount, 1)} tÃ i
-              liá»‡u
+              Đã đọc {readCount}/{Math.max(project.sources.length, readCount, 1)} tài
+              liệu
             </h1>
             <p className="mt-1 text-sm text-slate-600">
-              Chá»n tÃ i liá»‡u dÃ¹ng Ä‘á»ƒ viáº¿t ká»‹ch báº£n. CÃ³ thá»ƒ má»Ÿ panel Ä‘á»ƒ xem há»‡
-              thá»‘ng Ä‘ang Ä‘á»c Ä‘áº¿n Ä‘Ã¢u hoáº·c thÃªm tÃ i liá»‡u má»›i.
+              Chọn tài liệu dùng để viết kịch bản. Có thể mở panel để xem hệ
+              thống đang đọc đến đâu hoặc thêm tài liệu mới.
             </p>
           </div>
           <span className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-700">
@@ -697,27 +697,27 @@ function ResearchPanel({
               <ProgressPill
                 done={project.sources.length > 0}
                 active={busy && project.sources.length === 0}
-                label="TÃ¬m danh sÃ¡ch URL"
+                label="Tìm danh sách URL"
               />
               <ProgressPill
                 done={readCount > 0}
                 active={busy}
-                label={`Äá»c ${readCount}/${Math.max(project.sources.length, 1)}`}
+                label={`Đọc ${readCount}/${Math.max(project.sources.length, 1)}`}
               />
               <ProgressPill
                 done={usable > 0}
                 active={busy && usable === 0}
-                label={`${usable} nguá»“n dÃ¹ng Ä‘Æ°á»£c`}
+                label={`${usable} nguồn dùng được`}
               />
             </div>
             <div className="mt-4 rounded-2xl bg-slate-50 p-4">
-              <p className="text-sm font-bold text-slate-800">Nháº­t kÃ½ research</p>
+              <p className="text-sm font-bold text-slate-800">Nhật ký research</p>
               <ol className="mt-3 space-y-2 text-sm text-slate-600">
                 {(progressLog.length
                   ? progressLog
                   : [
                       message ||
-                        "ChÆ°a cÃ³ tiáº¿n trÃ¬nh má»›i. Báº¥m tÃ¬m thÃªm hoáº·c thÃªm URL Ä‘á»ƒ research tiáº¿p.",
+                        "Chưa có tiến trình mới. Bấm tìm thêm hoặc thêm URL để research tiếp.",
                     ]
                 )
                   .slice(-6)
@@ -732,7 +732,7 @@ function ResearchPanel({
             <div className="mt-4 grid gap-3 lg:grid-cols-[1fr_auto_auto]">
               <label>
                 <span className="mb-2 block text-sm font-bold text-slate-800">
-                  ThÃªm URL tÃ i liá»‡u
+                  Thêm URL tài liệu
                 </span>
                 <input
                   className={input}
@@ -748,14 +748,14 @@ function ResearchPanel({
                   run("add-source", { url }, "add-source").then(() => setUrl(""))
                 }
               >
-                <Plus className="size-4" /> Äá»c URL nÃ y
+                <Plus className="size-4" /> Đọc URL này
               </button>
               <button
                 className={`${secondary} self-end`}
                 disabled={busy}
                 onClick={() => run("research", {}, "research")}
               >
-                <RefreshCw className="size-4" /> TÃ¬m thÃªm tá»± Ä‘á»™ng
+                <RefreshCw className="size-4" /> Tìm thêm tự động
               </button>
             </div>
           </div>
@@ -792,7 +792,7 @@ function ResearchPanel({
                       />
                       <span className="min-w-0">
                         <span className="mb-1 block text-xs font-bold uppercase tracking-[0.16em] text-slate-400">
-                          TÃ i liá»‡u {index + 1}
+                          Tài liệu {index + 1}
                         </span>
                         <strong className="block text-slate-950">
                           {source.meta?.tieu_de || source.url}
@@ -809,22 +809,22 @@ function ResearchPanel({
                     </span>
                   </div>
                   <p className="mt-3 text-sm leading-6 text-slate-600">
-                    {source.ly_do || "ChÆ°a cÃ³ ghi chÃº Ä‘Ã¡nh giÃ¡ nguá»“n."}
+                    {source.ly_do || "Chưa có ghi chú đánh giá nguồn."}
                   </p>
                   <div className="mt-3 flex flex-wrap items-center gap-2">
                     <button
                       className={secondary}
                       onClick={() => viewSource(source.nguon_id)}
                     >
-                      <FileText className="size-4" /> Xem Ä‘oáº¡n Ä‘Ã£ Ä‘á»c
+                      <FileText className="size-4" /> Xem đoạn đã đọc
                     </button>
                     {source.trich_dan?.length ? (
                       <span className="text-xs font-semibold text-slate-500">
-                        {source.trich_dan.length} Ä‘oáº¡n trÃ­ch cÃ³ thá»ƒ dÃ¹ng
+                        {source.trich_dan.length} đoạn trích có thể dùng
                       </span>
                     ) : (
                       <span className="text-xs font-semibold text-amber-700">
-                        ChÆ°a cÃ³ Ä‘oáº¡n trÃ­ch há»£p lá»‡
+                        Chưa có đoạn trích hợp lệ
                       </span>
                     )}
                   </div>
@@ -833,32 +833,32 @@ function ResearchPanel({
             })
           ) : (
             <div className="rounded-[1.5rem] border border-dashed border-slate-300 bg-white p-8 text-center text-slate-500">
-              ChÆ°a cÃ³ tÃ i liá»‡u. Báº¥m â€œTÃ¬m tÃ i liá»‡uâ€ hoáº·c thÃªm URL Ä‘á»ƒ báº¯t Ä‘áº§u
+              Chưa có tài liệu. Bấm "Tìm tài liệu" hoặc thêm URL để bắt đầu
               research.
             </div>
           )}
         </div>
         <aside className="h-fit rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm lg:sticky lg:top-24">
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-indigo-600">
-            Nguá»“n Ä‘Æ°á»£c chá»n
+            Nguồn được chọn
           </p>
           <p className="mt-2 text-3xl font-black text-slate-950">
             {checkedUsable}/{usable}
           </p>
           <p className="mt-2 text-sm leading-6 text-slate-600">
-            Chá»‰ nguá»“n cÃ³ Ä‘oáº¡n trÃ­ch há»£p lá»‡ má»›i Ä‘Æ°á»£c dÃ¹ng Ä‘á»ƒ viáº¿t ká»‹ch báº£n nháº±m
-            giáº£m hallucination.
+            Chỉ nguồn có đoạn trích hợp lệ mới được dùng để viết kịch bản nhằm
+            giảm hallucination.
           </p>
           <button
             className={`${primary} mt-5 w-full`}
             disabled={busy || checkedUsable === 0}
             onClick={writeScript}
           >
-            <Sparkles className="size-4" /> Viáº¿t ká»‹ch báº£n
+            <Sparkles className="size-4" /> Viết kịch bản
           </button>
           {checkedUsable === 0 && (
             <p className="mt-3 text-xs text-amber-700">
-              Chá»n Ã­t nháº¥t má»™t tÃ i liá»‡u cÃ³ thá»ƒ dÃ¹ng.
+              Chọn ít nhất một tài liệu có thể dùng.
             </p>
           )}
         </aside>
@@ -1011,14 +1011,14 @@ export default function App() {
     setBusy(true);
     setBusyKind(kind || (action as BusyKind));
     setError("");
-    onProgress(action === "generate" ? "Äang chuáº©n bá»‹ nguá»“n Ä‘Ã£ chá»n..." : "Äang xá»­ lÃ½...");
+    onProgress(action === "generate" ? "Đang chuẩn bị nguồn đã chọn..." : "Đang xử lý...");
     try {
       const nextProject = await projectAction(baseProject, action, extra, onProgress);
       setProject(nextProject);
       setSelected(nextProject.sources.filter((s) => s.approved).map((s) => s.nguon_id));
       if (action === "generate" || action === "rewrite") setStep(3);
       refreshList();
-      notify(action === "generate" ? "ÄÃ£ táº¡o ká»‹ch báº£n nhÃ¡p." : "ÄÃ£ lÆ°u káº¿t quáº£.");
+      notify(action === "generate" ? "Đã tạo kịch bản nháp." : "Đã lưu kết quả.");
       return nextProject;
     } catch (err) {
       setError((err as Error).message);
@@ -1039,8 +1039,8 @@ export default function App() {
     setProgressLog([]);
     onProgress(
       mode === "research"
-        ? "Äang táº¡o phiÃªn vÃ  chuáº©n bá»‹ truy váº¥n research..."
-        : "Äang táº¡o phiÃªn rÃ  soÃ¡t...",
+        ? "Đang tạo phiên và chuẩn bị truy vấn research..."
+        : "Đang tạo phiên rà soát...",
     );
     try {
       const newProject = await createProject(
@@ -1060,9 +1060,9 @@ export default function App() {
       setProject(updated);
       if (mode === "research") {
         setResearchOpen(true);
-        notify("ÄÃ£ tÃ¬m vÃ  Ä‘á»c tÃ i liá»‡u. Chá»n nguá»“n Ä‘á»ƒ viáº¿t.");
+        notify("Đã tìm và đọc tài liệu. Chọn nguồn để viết.");
       } else {
-        notify("ÄÃ£ rÃ  soÃ¡t ká»‹ch báº£n.");
+        notify("Đã rà soát kịch bản.");
       }
     } catch (err) {
       setError((err as Error).message);
@@ -1083,7 +1083,7 @@ export default function App() {
   }
 
   async function remove(id: string) {
-    if (!window.confirm("XÃ³a phiÃªn nÃ y vÃ  toÃ n bá»™ dá»¯ liá»‡u Ä‘Ã£ lÆ°u?")) return;
+    if (!window.confirm("Xóa phiên này và toàn bộ dữ liệu đã lưu?")) return;
     try {
       await deleteProject(id);
       if (project?.id === id) setProject(null);
@@ -1113,7 +1113,7 @@ export default function App() {
     const voices = window.speechSynthesis?.getVoices() || [];
     const vi = voices.find((voice) => voice.lang.toLowerCase().startsWith("vi"));
     if (!vi) {
-      setError("Thiáº¿t bá»‹ chÆ°a cÃ³ giá»ng tiáº¿ng Viá»‡t. Báº¡n váº«n cÃ³ thá»ƒ Ä‘á»c thá»­ trÃªn mÃ n hÃ¬nh.");
+      setError("Thiết bị chưa có giọng tiếng Việt. Bạn vẫn có thể đọc thử trên màn hình.");
       return;
     }
     window.speechSynthesis.cancel();
@@ -1132,32 +1132,32 @@ export default function App() {
     return (
       <article key={finding.id} className={`${card} space-y-3`}>
         <div className="flex flex-wrap items-center gap-2">
-          <strong>{categoryLabel[finding.category] || "GÃ³p Ã½"}</strong>
+          <strong>{categoryLabel[finding.category] || "Góp ý"}</strong>
           <span className="rounded-full bg-amber-100 px-2 py-1 text-xs font-bold text-amber-800">
-            Má»©c Ä‘á»™: {finding.severity}
+            Mức độ: {finding.severity}
           </span>
-          <span className="text-xs text-slate-500">CÃ¢u {sentence?.scene}</span>
+          <span className="text-xs text-slate-500">Câu {sentence?.scene}</span>
         </div>
-        <p><span className="font-semibold">Äoáº¡n nÃ o:</span> {finding.quote || sentence?.text}</p>
-        <p><span className="font-semibold">VÃ¬ sao:</span> {finding.reason}</p>
-        <p><span className="font-semibold">Sá»­a thÃ nh gÃ¬:</span> {finding.suggestion || "Cáº§n tá»± kiá»ƒm tra"}</p>
+        <p><span className="font-semibold">Đoạn nào:</span> {finding.quote || sentence?.text}</p>
+        <p><span className="font-semibold">Vì sao:</span> {finding.reason}</p>
+        <p><span className="font-semibold">Sửa thành gì:</span> {finding.suggestion || "Cần tự kiểm tra"}</p>
         {finding.replacement && (
           <p className="rounded-2xl bg-indigo-50 p-3 text-sm leading-6 text-indigo-950">
-            TrÆ°á»›c: {finding.quote}<br />Sau: {finding.replacement}
+            Trước: {finding.quote}<br />Sau: {finding.replacement}
           </p>
         )}
         <div className="flex flex-wrap gap-2">
           {finding.decision ? (
             <>
               <span className="py-2 text-sm font-semibold text-slate-600">
-                {finding.decision === "accepted" ? "ÄÃ£ cháº¥p nháº­n" : "ÄÃ£ giá»¯ nguyÃªn"}
+                {finding.decision === "accepted" ? "Đã chấp nhận" : "Đã giữ nguyên"}
               </span>
               <button
                 className={secondary}
                 disabled={busy}
                 onClick={() => run("decision", { findingId: finding.id, decision: "undo" }, "save")}
               >
-                HoÃ n tÃ¡c
+                Hoàn tác
               </button>
             </>
           ) : (
@@ -1165,17 +1165,17 @@ export default function App() {
               <button
                 className={primary}
                 disabled={busy || !finding.replacement}
-                title={!finding.replacement ? "GÃ³p Ã½ nÃ y cáº§n kiá»ƒm tra thá»§ cÃ´ng" : ""}
+                title={!finding.replacement ? "Góp ý này cần kiểm tra thủ công" : ""}
                 onClick={() => run("decision", { findingId: finding.id, decision: "accept" }, "save")}
               >
-                Cháº¥p nháº­n sá»­a
+                Chấp nhận sửa
               </button>
               <button
                 className={secondary}
                 disabled={busy}
                 onClick={() => run("decision", { findingId: finding.id, decision: "reject" }, "save")}
               >
-                Giá»¯ nguyÃªn
+                Giữ nguyên
               </button>
             </>
           )}
@@ -1201,7 +1201,7 @@ export default function App() {
         {error && (
           <div role="alert" className="flex items-start justify-between gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
             <span className="flex gap-2"><AlertCircle className="mt-0.5 size-4 shrink-0" />{error}</span>
-            <button className="font-semibold underline" onClick={() => setError("")}>ÄÃ³ng</button>
+            <button className="font-semibold underline" onClick={() => setError("")}>Đóng</button>
           </div>
         )}
         <LoadingPanel busy={busy} kind={busyKind} message={message} log={progressLog} />
@@ -1228,7 +1228,7 @@ export default function App() {
         {project && (
           <>
             <section className="grid gap-2 sm:grid-cols-4">
-              {["Nháº­p bÃ i há»c", `Research (${project.sources.length})`, "Ká»‹ch báº£n", "Táº£i vá»"].map((label, index) => (
+              {["Nhập bài học", `Research (${project.sources.length})`, "Kịch bản", "Tải về"].map((label, index) => (
                 <button
                   key={label}
                   className={`rounded-2xl border px-3 py-3 text-left text-sm font-semibold ${
@@ -1241,7 +1241,7 @@ export default function App() {
                   disabled={index === 0 || (index === 2 && !project.sentences.length)}
                   onClick={() => setStep(index + 1)}
                 >
-                  <span className="mb-1 block text-xs uppercase tracking-[0.14em] opacity-70">BÆ°á»›c {index + 1}</span>
+                  <span className="mb-1 block text-xs uppercase tracking-[0.14em] opacity-70">Bước {index + 1}</span>
                   {label}
                 </button>
               ))}
@@ -1250,15 +1250,15 @@ export default function App() {
             <section className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">PhiÃªn Ä‘ang lÃ m</p>
-                  <h1 className="mt-1 text-2xl font-black text-slate-950">{project.brief.topic || "Ká»‹ch báº£n rÃ  soÃ¡t"}</h1>
-                  <p className="mt-1 text-sm text-slate-600">{project.mode === "research" ? `${project.brief.audience} Â· ${project.brief.duration} phÃºt` : "RÃ  soÃ¡t ká»‹ch báº£n cÃ³ sáºµn"}</p>
+                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Phiên đang làm</p>
+                  <h1 className="mt-1 text-2xl font-black text-slate-950">{project.brief.topic || "Kịch bản rà soát"}</h1>
+                  <p className="mt-1 text-sm text-slate-600">{project.mode === "research" ? `${project.brief.audience} · ${project.brief.duration} phút` : "Rà soát kịch bản có sẵn"}</p>
                 </div>
                 {qualityStats && (
                   <div className="grid grid-cols-3 gap-2 text-center sm:min-w-96">
-                    <div className="rounded-2xl bg-slate-50 p-3"><p className="text-lg font-black text-slate-950">{qualityStats.approved}</p><p className="text-xs text-slate-500">nguá»“n chá»n</p></div>
-                    <div className="rounded-2xl bg-slate-50 p-3"><p className="text-lg font-black text-slate-950">{qualityStats.evidence}</p><p className="text-xs text-slate-500">trÃ­ch dáº«n</p></div>
-                    <div className="rounded-2xl bg-slate-50 p-3"><p className="text-lg font-black text-slate-950">{qualityStats.sentences}</p><p className="text-xs text-slate-500">cÃ¢u/cáº£nh</p></div>
+                    <div className="rounded-2xl bg-slate-50 p-3"><p className="text-lg font-black text-slate-950">{qualityStats.approved}</p><p className="text-xs text-slate-500">nguồn chọn</p></div>
+                    <div className="rounded-2xl bg-slate-50 p-3"><p className="text-lg font-black text-slate-950">{qualityStats.evidence}</p><p className="text-xs text-slate-500">trích dẫn</p></div>
+                    <div className="rounded-2xl bg-slate-50 p-3"><p className="text-lg font-black text-slate-950">{qualityStats.sentences}</p><p className="text-xs text-slate-500">câu/cảnh</p></div>
                   </div>
                 )}
               </div>
@@ -1285,43 +1285,43 @@ export default function App() {
               <section className="space-y-4">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                   <div>
-                    <p className="text-xs font-bold uppercase tracking-[0.18em] text-indigo-600">{project.mode === "research" ? "BÆ°á»›c 3" : "Káº¿t quáº£ rÃ  soÃ¡t"}</p>
-                    <h1 className="mt-1 text-2xl font-black text-slate-950">Ká»‹ch báº£n nhÃ¡p</h1>
-                    <p className="mt-1 text-sm text-slate-600">Äá»c tá»«ng cáº£nh, má»Ÿ nguá»“n Ä‘á»ƒ kiá»ƒm tra cÄƒn cá»©, rá»“i cháº¡y rÃ  soÃ¡t trÆ°á»›c khi duyá»‡t.</p>
+                    <p className="text-xs font-bold uppercase tracking-[0.18em] text-indigo-600">{project.mode === "research" ? "Bước 3" : "Kết quả rà soát"}</p>
+                    <h1 className="mt-1 text-2xl font-black text-slate-950">Kịch bản nháp</h1>
+                    <p className="mt-1 text-sm text-slate-600">Đọc từng cảnh, mở nguồn để kiểm tra căn cứ, rồi chạy rà soát trước khi duyệt.</p>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {project.mode === "research" && <button className={secondary} onClick={() => setStep(2)}>Chá»n láº¡i tÃ i liá»‡u</button>}
-                    {project.mode === "research" && <button className={secondary} disabled={busy} onClick={() => run("rewrite", {}, "rewrite")}>Viáº¿t láº¡i pháº§n cáº§n sá»­a</button>}
-                    <button className={primary} disabled={busy || !project.sentences.length} onClick={() => run("review", {}, "review")}>RÃ  soÃ¡t</button>
-                    <button className={secondary} disabled={!project.sentences.length} onClick={() => setTeleprompter(true)}>Äá»c thá»­</button>
-                    <button className={secondary} onClick={() => setStep(4)}>Táº£i vá»</button>
+                    {project.mode === "research" && <button className={secondary} onClick={() => setStep(2)}>Chọn lại tài liệu</button>}
+                    {project.mode === "research" && <button className={secondary} disabled={busy} onClick={() => run("rewrite", {}, "rewrite")}>Viết lại phần cần sửa</button>}
+                    <button className={primary} disabled={busy || !project.sentences.length} onClick={() => run("review", {}, "review")}>Rà soát</button>
+                    <button className={secondary} disabled={!project.sentences.length} onClick={() => setTeleprompter(true)}>Đọc thử</button>
+                    <button className={secondary} onClick={() => setStep(4)}>Tải về</button>
                   </div>
                 </div>
                 <div className="space-y-3">
                   {project.sentences.map((sentence) => (
                     <article key={sentence.id} className={`${card} space-y-3`}>
                       <div className="flex flex-wrap items-center justify-between gap-3">
-                        <h2 className="font-bold text-slate-950">Cáº£nh {sentence.scene} Â· {sentence.seconds || 0} giÃ¢y</h2>
+                        <h2 className="font-bold text-slate-950">Cảnh {sentence.scene} · {sentence.seconds || 0} giây</h2>
                         <div className="flex flex-wrap gap-2">
-                          {sentence.needsVerification && <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-800">Cáº§n kiá»ƒm chá»©ng</span>}
-                          {sentence.needsRewrite && <span className="rounded-full bg-rose-100 px-2.5 py-1 text-xs font-bold text-rose-800">Cáº§n viáº¿t láº¡i</span>}
+                          {sentence.needsVerification && <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-800">Cần kiểm chứng</span>}
+                          {sentence.needsRewrite && <span className="rounded-full bg-rose-100 px-2.5 py-1 text-xs font-bold text-rose-800">Cần viết lại</span>}
                         </div>
                       </div>
                       {editing === sentence.id ? (
                         <div className="space-y-2">
                           <textarea className={`${input} min-h-28`} value={editText} onChange={(event) => setEditText(event.target.value)} />
                           <div className="flex gap-2">
-                            <button className={primary} disabled={busy || !editText.trim()} onClick={() => { run("edit-sentence", { sentenceId: sentence.id, text: editText }, "save"); setEditing(null); }}>LÆ°u cÃ¢u</button>
-                            <button className={secondary} onClick={() => setEditing(null)}>Há»§y</button>
+                            <button className={primary} disabled={busy || !editText.trim()} onClick={() => { run("edit-sentence", { sentenceId: sentence.id, text: editText }, "save"); setEditing(null); }}>Lưu câu</button>
+                            <button className={secondary} onClick={() => setEditing(null)}>Hủy</button>
                           </div>
                         </div>
                       ) : (
                         <p className="text-lg leading-8 text-slate-800">{sentence.text}</p>
                       )}
-                      {sentence.visual && <p className="rounded-2xl bg-slate-50 p-3 text-sm text-slate-600"><span className="font-semibold text-slate-800">Gá»£i Ã½ hÃ¬nh:</span> {sentence.visual}</p>}
+                      {sentence.visual && <p className="rounded-2xl bg-slate-50 p-3 text-sm text-slate-600"><span className="font-semibold text-slate-800">Gợi ý hình:</span> {sentence.visual}</p>}
                       <div className="flex flex-wrap gap-2">
-                        <button className={secondary} onClick={() => { setEditing(sentence.id); setEditText(sentence.text); }}>Sá»­a cÃ¢u</button>
-                        {sentence.evidenceIds.map((id) => <button key={id} className={secondary} onClick={() => viewSource(id)}>Xem nguá»“n</button>)}
+                        <button className={secondary} onClick={() => { setEditing(sentence.id); setEditText(sentence.text); }}>Sửa câu</button>
+                        {sentence.evidenceIds.map((id) => <button key={id} className={secondary} onClick={() => viewSource(id)}>Xem nguồn</button>)}
                       </div>
                     </article>
                   ))}
@@ -1332,8 +1332,8 @@ export default function App() {
             {project.findings.length > 0 && step !== 4 && (
               <section className="space-y-4">
                 <div>
-                  <h1 className="text-2xl font-black text-slate-950">GÃ³p Ã½ cáº§n duyá»‡t</h1>
-                  <p className="mt-1 text-sm text-slate-600">CÃ³ {pending} gÃ³p Ã½ chÆ°a xá»­ lÃ½.</p>
+                  <h1 className="text-2xl font-black text-slate-950">Góp ý cần duyệt</h1>
+                  <p className="mt-1 text-sm text-slate-600">Có {pending} góp ý chưa xử lý.</p>
                 </div>
                 {project.findings.map(findingView)}
               </section>
@@ -1341,13 +1341,13 @@ export default function App() {
 
             {step === 4 && (
               <section className={`${card} space-y-4`}>
-                <h1 className="text-2xl font-black text-slate-950">Táº£i vá»</h1>
-                <p className="text-slate-600">{project.approvedRevision === project.revision ? "Báº£n Ä‘Ã£ duyá»‡t" : `Báº£n nhÃ¡p â€” cÃ²n ${pending + affected + unverified} chá»— cáº§n kiá»ƒm tra`}</p>
+                <h1 className="text-2xl font-black text-slate-950">Tải về</h1>
+                <p className="text-slate-600">{project.approvedRevision === project.revision ? "Bản đã duyệt" : `Bản nháp — còn ${pending + affected + unverified} chỗ cần kiểm tra`}</p>
                 <div className="flex flex-wrap gap-2">
-                  <button className={primary} onClick={() => download("kich-ban.md", exportMarkdown(project), "text/markdown;charset=utf-8")}><Download className="size-4" /> Táº£i ká»‹ch báº£n</button>
-                  <button className={secondary} onClick={() => download("ho-so-nguon-audit.json", JSON.stringify({ sources: project.sources, claims: project.claims, audit: project.audit }, null, 2), "application/json")}><Download className="size-4" /> Táº£i há»“ sÆ¡ nguá»“n</button>
-                  <button className={button} disabled={busy || !canApprove} title={!canApprove ? "Cáº§n hoÃ n táº¥t rÃ  soÃ¡t vÃ  xá»­ lÃ½ gÃ³p Ã½ quan trá»ng" : ""} onClick={() => run("decision", { target: "project", decision: "approve" }, "save")}>Duyá»‡t báº£n nÃ y</button>
-                  <button className={secondary} onClick={() => setStep(project.mode === "qa" ? 2 : 3)}>Quay láº¡i ká»‹ch báº£n</button>
+                  <button className={primary} onClick={() => download("kich-ban.md", exportMarkdown(project), "text/markdown;charset=utf-8")}><Download className="size-4" /> Tải kịch bản</button>
+                  <button className={secondary} onClick={() => download("ho-so-nguon-audit.json", JSON.stringify({ sources: project.sources, claims: project.claims, audit: project.audit }, null, 2), "application/json")}><Download className="size-4" /> Tải hồ sơ nguồn</button>
+                  <button className={button} disabled={busy || !canApprove} title={!canApprove ? "Cần hoàn tất rà soát và xử lý góp ý quan trọng" : ""} onClick={() => run("decision", { target: "project", decision: "approve" }, "save")}>Duyệt bản này</button>
+                  <button className={secondary} onClick={() => setStep(project.mode === "qa" ? 2 : 3)}>Quay lại kịch bản</button>
                 </div>
               </section>
             )}
@@ -1356,42 +1356,42 @@ export default function App() {
       </main>
 
       {source && (
-        <div role="dialog" tabIndex={-1} aria-modal="true" aria-label="Äoáº¡n lÃ m cÄƒn cá»©" className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-3" onMouseDown={(event) => { if (event.target === event.currentTarget) setSource(null); }}>
+        <div role="dialog" tabIndex={-1} aria-modal="true" aria-label="Đoạn làm căn cứ" className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-3" onMouseDown={(event) => { if (event.target === event.currentTarget) setSource(null); }}>
           <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-[2rem] bg-white p-6 shadow-xl">
             <div className="flex justify-between gap-3">
               <div>
-                <p className="text-xs font-bold uppercase tracking-[0.18em] text-indigo-600">TÃ i liá»‡u Ä‘Ã£ Ä‘á»c</p>
-                <h2 className="mt-1 text-xl font-black text-slate-950">{source.meta?.tieu_de || "Nguá»“n tÃ i liá»‡u"}</h2>
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-indigo-600">Tài liệu đã đọc</p>
+                <h2 className="mt-1 text-xl font-black text-slate-950">{source.meta?.tieu_de || "Nguồn tài liệu"}</h2>
               </div>
-              <button aria-label="ÄÃ³ng" className="flex size-10 items-center justify-center rounded-2xl bg-slate-100" onClick={() => setSource(null)}><X className="size-5" /></button>
+              <button aria-label="Đóng" className="flex size-10 items-center justify-center rounded-2xl bg-slate-100" onClick={() => setSource(null)}><X className="size-5" /></button>
             </div>
-            <p className="mt-2 text-sm text-slate-600">{source.meta?.tac_gia || source.meta?.to_chuc || "KhÃ´ng rÃµ tÃ¡c giáº£"} Â· {source.meta?.ngay_dang || "KhÃ´ng rÃµ ngÃ y"}</p>
-            <a className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-indigo-700 underline" href={source.url} target="_blank" rel="noopener noreferrer">Má»Ÿ trang gá»‘c <ExternalLink className="size-4" /></a>
+            <p className="mt-2 text-sm text-slate-600">{source.meta?.tac_gia || source.meta?.to_chuc || "Không rõ tác giả"} · {source.meta?.ngay_dang || "Không rõ ngày"}</p>
+            <a className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-indigo-700 underline" href={source.url} target="_blank" rel="noopener noreferrer">Mở trang gốc <ExternalLink className="size-4" /></a>
             <p className="mt-4 rounded-2xl bg-slate-50 p-3 text-sm leading-6 text-slate-600">{source.ly_do}</p>
-            <h3 className="mt-5 font-bold text-slate-950">Äoáº¡n lÃ m cÄƒn cá»©</h3>
+            <h3 className="mt-5 font-bold text-slate-950">Đoạn làm căn cứ</h3>
             {source.trich_dan?.length ? (
               [...source.trich_dan].sort((a, b) => a === focusQuote ? -1 : b === focusQuote ? 1 : 0).map((quote, index) => (
                 <blockquote key={index} className={`my-2 rounded-2xl border-l-4 p-3 text-sm leading-6 ${quote === focusQuote ? "border-indigo-700 bg-indigo-100" : "border-indigo-400 bg-indigo-50"}`}>{quote}</blockquote>
               ))
-            ) : <p className="mt-2 text-sm text-slate-500">ChÆ°a cÃ³ Ä‘oáº¡n trÃ­ch há»£p lá»‡.</p>}
+            ) : <p className="mt-2 text-sm text-slate-500">Chưa có đoạn trích hợp lệ.</p>}
             <details className="mt-5 rounded-2xl border border-slate-200 p-4">
-              <summary className="cursor-pointer font-semibold text-slate-800">Xem toÃ n bá»™ ná»™i dung Ä‘Ã£ Ä‘á»c vÃ  mÃ£ Ä‘á»‘i chiáº¿u</summary>
-              <p className="mt-3 break-all text-xs text-slate-500">SHA-256: {source.snapshot_hash || "KhÃ´ng cÃ³"}</p>
-              <pre className="mt-3 max-h-80 overflow-auto whitespace-pre-wrap rounded-2xl bg-slate-950 p-4 text-xs leading-5 text-slate-100">{source.snapshot || "KhÃ´ng Ä‘á»c Ä‘Æ°á»£c ná»™i dung"}</pre>
+              <summary className="cursor-pointer font-semibold text-slate-800">Xem toàn bộ nội dung đã đọc và mã đối chiếu</summary>
+              <p className="mt-3 break-all text-xs text-slate-500">SHA-256: {source.snapshot_hash || "Không có"}</p>
+              <pre className="mt-3 max-h-80 overflow-auto whitespace-pre-wrap rounded-2xl bg-slate-950 p-4 text-xs leading-5 text-slate-100">{source.snapshot || "Không đọc được nội dung"}</pre>
             </details>
           </div>
         </div>
       )}
 
       {teleprompter && project && (
-        <div role="dialog" tabIndex={-1} aria-modal="true" aria-label="Äá»c thá»­" className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 p-4">
+        <div role="dialog" tabIndex={-1} aria-modal="true" aria-label="Đọc thử" className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 p-4">
           <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-[2rem] bg-slate-900 p-8 text-white">
             <div className="flex justify-between gap-3">
-              <h2 className="text-xl font-black">Äá»c thá»­ ká»‹ch báº£n</h2>
-              <button aria-label="ÄÃ³ng" onClick={() => { setTeleprompter(false); window.speechSynthesis?.cancel(); }}><X /></button>
+              <h2 className="text-xl font-black">Đọc thử kịch bản</h2>
+              <button aria-label="Đóng" onClick={() => { setTeleprompter(false); window.speechSynthesis?.cancel(); }}><X /></button>
             </div>
             <div className="mt-6 space-y-5 text-2xl leading-relaxed">{project.sentences.map((sentence) => <p key={sentence.id}>{sentence.text}</p>)}</div>
-            <button className={`${primary} mt-6`} onClick={() => spoken ? (window.speechSynthesis.cancel(), setSpoken(false)) : readAloud()}>{spoken ? "Dá»«ng Ä‘á»c" : "Nghe giá»ng Viá»‡t"}</button>
+            <button className={`${primary} mt-6`} onClick={() => spoken ? (window.speechSynthesis.cancel(), setSpoken(false)) : readAloud()}>{spoken ? "Dừng đọc" : "Nghe giọng Việt"}</button>
           </div>
         </div>
       )}
