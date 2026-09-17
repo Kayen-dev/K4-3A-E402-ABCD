@@ -960,6 +960,7 @@ function TeacherApp({ user, onLogout }: { user: User; onLogout: () => void }) {
   const [projects, setProjects] = useState<Summary[]>([]);
   const [mode, setMode] = useState<"research" | "qa">("research");
   const [step, setStep] = useState(1);
+  const [findingEdits, setFindingEdits] = useState<Record<string, string>>({});
   const [brief, setBrief] = useState<BriefForm>({
     topic: "",
     goal: "",
@@ -1000,7 +1001,9 @@ function TeacherApp({ user, onLogout }: { user: User; onLogout: () => void }) {
     0;
   const pending = project?.findings.filter((finding) => !finding.decision).length || 0;
   const canApprove =
-    project?.reviewStatus === "complete" &&
+    project?.mode === 'qa'
+      ? !!project.sentences.length && ['complete', 'stale', 'partial'].includes(project.reviewStatus) && !pending
+      : project?.reviewStatus === "complete" &&
     !affected &&
     !unverified &&
     !project.findings.some(
@@ -1091,7 +1094,7 @@ function TeacherApp({ user, onLogout }: { user: User; onLogout: () => void }) {
   useEffect(() => {
     if (!project) return;
     setSelected(project.sources.filter((source) => source.approved).map((source) => source.nguon_id));
-    setStep(project.mode === "qa" ? 2 : project.sentences.length ? 3 : project.sources.length ? 2 : 1);
+    setStep(project.sentences.length ? 3 : project.sources.length ? 2 : 1);
   }, [project?.id]);
 
   const notify = (text: string) => {
@@ -1122,7 +1125,7 @@ function TeacherApp({ user, onLogout }: { user: User; onLogout: () => void }) {
       const nextProject = await projectAction(baseProject, action, extra, onProgress);
       setProject(nextProject);
       setSelected(nextProject.sources.filter((s) => s.approved).map((s) => s.nguon_id));
-      if (action === "generate" || action === "rewrite") setStep(3);
+      if (action === "generate" || action === "rewrite" || action === "review") { setStep(3); setFindingEdits({}); }
       refreshList();
       notify(action === "generate" ? "Đã tạo kịch bản nháp." : "Đã lưu kết quả.");
       return nextProject;
@@ -1168,6 +1171,8 @@ function TeacherApp({ user, onLogout }: { user: User; onLogout: () => void }) {
         setResearchOpen(true);
         notify("Đã tìm và đọc tài liệu. Chọn nguồn để viết.");
       } else {
+        setStep(3);
+        setFindingEdits({});
         notify("Đã rà soát kịch bản.");
       }
     } catch (err) {
@@ -1297,11 +1302,15 @@ function TeacherApp({ user, onLogout }: { user: User; onLogout: () => void }) {
             </>
           ) : (
             <>
+              <label className="w-full text-sm font-semibold text-slate-700">
+                Nội dung sửa {finding.quote ? '(thay đoạn được đánh dấu)' : '(thay toàn bộ câu)'}
+                <textarea className={`${input} mt-2 min-h-24`} maxLength={2000} disabled={busy} value={findingEdits[finding.id] ?? finding.replacement ?? ''} placeholder="Nhập nội dung sửa nếu agent chưa có bản thay thế..." onChange={event => setFindingEdits(previous => ({ ...previous, [finding.id]: event.target.value }))} />
+              </label>
               <button
                 className={primary}
-                disabled={busy || !finding.replacement}
-                title={!finding.replacement ? "Góp ý này cần kiểm tra thủ công" : ""}
-                onClick={() => run("decision", { findingId: finding.id, decision: "accept" }, "save")}
+                disabled={busy || !(findingEdits[finding.id] ?? finding.replacement ?? '').trim()}
+                title="Áp dụng nội dung sửa vào lời đọc"
+                onClick={() => run("decision", { findingId: finding.id, decision: "accept", replacement: findingEdits[finding.id] ?? finding.replacement }, "save")}
               >
                 Chấp nhận sửa
               </button>
@@ -1376,7 +1385,7 @@ function TeacherApp({ user, onLogout }: { user: User; onLogout: () => void }) {
                         ? "border-emerald-200 bg-emerald-50 text-emerald-800"
                         : "border-slate-200 bg-white text-slate-500"
                   }`}
-                  disabled={index === 0 || (index === 2 && !project.sentences.length)}
+                  disabled={index === 0 || (index === 1 && project.mode === 'qa') || (index === 2 && !project.sentences.length)}
                   onClick={() => setStep(index + 1)}
                 >
                   <span className="mb-1 block text-xs uppercase tracking-[0.14em] opacity-70">Bước {index + 1}</span>
@@ -1419,11 +1428,11 @@ function TeacherApp({ user, onLogout }: { user: User; onLogout: () => void }) {
               />
             )}
 
-            {((project.mode === "research" && step === 3) || (project.mode === "qa" && step === 2)) && (
+            {step === 3 && (
               <section className="space-y-4">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                   <div>
-                    <p className="text-xs font-bold uppercase tracking-[0.18em] text-indigo-600">{project.mode === "research" ? "Bước 3" : "Kết quả rà soát"}</p>
+                    <p className="text-xs font-bold uppercase tracking-[0.18em] text-indigo-600">Bước 3 · Kịch bản</p>
                     <h1 className="mt-1 text-2xl font-black text-slate-950">Kịch bản nháp</h1>
                     <p className="mt-1 text-sm text-slate-600">Đọc từng cảnh, mở nguồn để kiểm tra căn cứ, rồi chạy rà soát trước khi duyệt.</p>
                     {project.mode === "qa" && project.reviewFeedbackIds && <p className="mt-1 text-xs font-semibold text-indigo-700">Lượt rà soát này đã nhận {project.reviewFeedbackIds.length} góp ý được duyệt.</p>}
@@ -1434,6 +1443,7 @@ function TeacherApp({ user, onLogout }: { user: User; onLogout: () => void }) {
                     <button className={primary} disabled={busy || !project.sentences.length} onClick={() => run("review", {}, "review")}>Rà soát</button>
                     <button className={secondary} disabled={!project.sentences.length} onClick={() => setTeleprompter(true)}>Đọc thử</button>
                     <button className={secondary} onClick={() => setStep(4)}>Tải về</button>
+                    <button className={primary} disabled={busy || !canApprove} title={!canApprove ? 'Xử lý góp ý còn lại và hoàn tất các kiểm tra cần thiết' : 'Chốt phiên bản hiện tại'} onClick={async () => { const result = await run('decision', { target: 'project', decision: 'approve' }, 'save'); if (result) setStep(4); }}>Done · Chốt bản cuối</button>
                   </div>
                 </div>
                 <div className="space-y-3">
@@ -1494,10 +1504,11 @@ function TeacherApp({ user, onLogout }: { user: User; onLogout: () => void }) {
                 <h1 className="text-2xl font-black text-slate-950">Tải về</h1>
                 <p className="text-slate-600">{project.approvedRevision === project.revision ? "Bản đã duyệt" : `Bản nháp — còn ${pending + affected + unverified} chỗ cần kiểm tra`}</p>
                 <div className="flex flex-wrap gap-2">
-                  <button className={primary} onClick={() => download("kich-ban.md", exportMarkdown(project), "text/markdown;charset=utf-8")}><Download className="size-4" /> Tải kịch bản</button>
+                  <button className={primary} disabled={busy || project.approvedRevision !== project.revision} onClick={() => download("final.md", project.sentences.map(sentence => sentence.text.replace(/[^\p{L}\p{M}\p{N}\s]/gu, ' ').replace(/\s+/g, ' ').trim()).join('\n'), "text/markdown;charset=utf-8")}><Download className="size-4" /> Tải final.md</button>
+                  <button className={secondary} onClick={() => download("kich-ban.md", exportMarkdown(project), "text/markdown;charset=utf-8")}><Download className="size-4" /> Tải bản có ngữ cảnh</button>
                   <button className={secondary} onClick={() => download("ho-so-nguon-audit.json", JSON.stringify({ sources: project.sources, claims: project.claims, audit: project.audit }, null, 2), "application/json")}><Download className="size-4" /> Tải hồ sơ nguồn</button>
                   <button className={button} disabled={busy || !canApprove} title={!canApprove ? "Cần hoàn tất rà soát và xử lý góp ý quan trọng" : ""} onClick={() => run("decision", { target: "project", decision: "approve" }, "save")}>Duyệt bản này</button>
-                  <button className={secondary} onClick={() => setStep(project.mode === "qa" ? 2 : 3)}>Quay lại kịch bản</button>
+                  <button className={secondary} onClick={() => setStep(3)}>Quay lại kịch bản</button>
                 </div>
               </section>
             )}

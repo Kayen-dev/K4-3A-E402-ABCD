@@ -92,7 +92,10 @@ async function mutate(id, expected, fn) {
     const p = await getProject(id);
     if (p.revision !== expected) throw fault(409, 'REVISION_CONFLICT', 'Phiên đã thay đổi. Tải lại rồi thử tiếp.');
     const result = await fn(p);
-    change(p); await save(p); return result || p;
+    const approvingNextRevision = p.approvedRevision === p.revision + 1;
+    change(p);
+    if (approvingNextRevision) p.approvedRevision = p.revision;
+    await save(p); return result || p;
   });
 }
 export async function deleteProject(id) {
@@ -149,7 +152,10 @@ export async function actionProject(id, body, emit = () => {}) {
     } else if (action === 'decision') {
       if (body.target === 'project') {
         if (body.decision !== 'approve') throw fault(400, 'INVALID_DECISION', 'Quyết định không hợp lệ');
-        if (p.reviewStatus !== 'complete' || p.findings.some(f => (f.category === 'thieu-can-cu' && f.decision !== 'accepted') || (f.severity === 'cao' && !['accepted', 'rejected'].includes(f.decision))) || p.sentences.some(s => s.needsRewrite || s.needsVerification)) throw fault(400, 'BLOCKING_FINDINGS', 'Còn câu cần kiểm tra hoặc góp ý quan trọng chưa xử lý');
+        const blocked = p.mode === 'qa'
+          ? !p.sentences.length || !['complete', 'stale', 'partial'].includes(p.reviewStatus) || p.findings.some(f => !f.decision)
+          : p.reviewStatus !== 'complete' || p.findings.some(f => (f.category === 'thieu-can-cu' && f.decision !== 'accepted') || (f.severity === 'cao' && !['accepted', 'rejected'].includes(f.decision))) || p.sentences.some(s => s.needsRewrite || s.needsVerification);
+        if (blocked) throw fault(400, 'BLOCKING_FINDINGS', 'Còn câu cần kiểm tra hoặc góp ý chưa xử lý');
         p.approvedRevision = p.revision + 1; audit(p, 'approve-project', id, null, 'approved');
       } else {
         const f = p.findings.find(x => x.id === body.findingId);
@@ -157,8 +163,14 @@ export async function actionProject(id, body, emit = () => {}) {
         if (!f || !s || !['accept', 'reject', 'undo'].includes(body.decision)) throw fault(400, 'INVALID_FINDING', 'Góp ý không hợp lệ');
         const before = s.text;
         if (body.decision === 'accept') {
-          if (f.decision || !f.replacement || s.text.slice(f.start, f.end) !== f.quote) throw fault(409, 'STALE_FINDING', 'Góp ý đã cũ hoặc không có đoạn sửa an toàn');
-          f.previousText = s.text; s.text = s.text.slice(0, f.start) + f.replacement + s.text.slice(f.end); f.decision = 'accepted'; p.reviewStatus = 'stale';
+          const replacement = String(body.replacement ?? f.replacement ?? '').trim();
+          if (f.decision || !replacement || replacement.length > 2000) throw fault(400, 'INVALID_REPLACEMENT', 'Nhập nội dung sửa tối đa 2.000 ký tự');
+          const start = f.quote ? s.text.indexOf(f.quote) : 0;
+          const end = f.quote ? start + f.quote.length : s.text.length;
+          if (start < 0 || (f.quote && s.text.indexOf(f.quote, start + 1) >= 0) || (!f.quote && s.text !== f.originalSentence)) throw fault(409, 'STALE_FINDING', 'Câu đã thay đổi hoặc đoạn sửa không rõ vị trí. Hãy rà soát lại.');
+          const next = s.text.slice(0, start) + replacement + s.text.slice(end);
+          if (next.length > 2000) throw fault(400, 'INVALID_REPLACEMENT', 'Câu sau khi sửa tối đa 2.000 ký tự');
+          f.previousText = s.text; s.text = next; f.replacement = replacement; f.decision = 'accepted'; p.reviewStatus = 'stale';
         } else if (body.decision === 'reject') { f.decision = 'rejected'; }
         else { if (f.decision === 'accepted' && f.previousText) s.text = f.previousText; f.decision = null; f.previousText = null; p.reviewStatus = 'stale'; }
         audit(p, body.decision, f.id, before, s.text);
