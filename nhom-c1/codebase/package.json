@@ -1,0 +1,11 @@
+{
+  "name": "scriptscout",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "C3 ScriptScout + C2 QA — nhóm 3A, hackathon AI20k K4",
+  "scripts": {
+    "eval": "node ../eval/run.js"
+  },
+  "engines": { "node": ">=18" }
+}

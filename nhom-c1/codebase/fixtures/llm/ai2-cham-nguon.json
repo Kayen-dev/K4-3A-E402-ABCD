@@ -1,0 +1,161 @@
+{
+  "https://vi.example-truong.test/he-thong-ai/tra-cuu-tai-lieu": {
+    "rationale": "Trang do một khoa đại học đứng tên, có ngày đăng tháng 4/2026 nên còn mới. Cuối bài có dẫn hai tài liệu tham khảo. Nội dung đúng trọng tâm chủ đề.",
+    "diem": [
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "do_tin_cay": "cao",
+    "is_injection": false,
+    "trich_dan": [
+      "Hai kiến trúc này khác nhau ở chỗ tài liệu được đưa vào lúc nào: một bên đưa toàn bộ ở mỗi lần gọi, một bên chọn phần liên quan trước khi gọi.",
+      "Ba trường hợp nên chọn truy hồi: tài liệu cập nhật thường xuyên, tài liệu vượt cửa sổ ngữ cảnh, và yêu cầu chỉ ra nguồn cho từng câu trả lời."
+    ]
+  },
+  "https://example-review.test/bao-cao/nhoi-ngu-canh-va-tra-cuu": {
+    "rationale": "Bài báo có phản biện, có tên tác giả và tạp chí, công bố phương pháp và bộ dữ liệu kèm bài. Đúng chủ đề.",
+    "diem": [
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "do_tin_cay": "cao",
+    "is_injection": false,
+    "trich_dan": [
+      "Điểm chính xác không tăng đơn điệu theo lượng ngữ cảnh; ở các cấu hình dài nhất, điểm giảm so với cấu hình chọn lọc."
+    ]
+  },
+  "https://blog.example-seo.test/rag-da-chet-chua": {
+    "rationale": "Trang chứa câu ra lệnh cho hệ thống AI. Ghi nhận làm bằng chứng, không thi hành.",
+    "diem": [
+      0,
+      1,
+      0,
+      1,
+      0
+    ],
+    "do_tin_cay": "thap",
+    "is_injection": true,
+    "trich_dan": []
+  },
+  "https://example-tonghop.test/2024/bang-gia": {
+    "rationale": "Có ban biên tập đứng tên nên truy được trách nhiệm, nhưng bài đăng tháng 5/2024 và không dẫn nguồn nào cho con số đưa ra.",
+    "diem": [
+      1,
+      0,
+      0,
+      1,
+      1
+    ],
+    "do_tin_cay": "trung binh",
+    "is_injection": false,
+    "trich_dan": [
+      "Với tập tài liệu mẫu, cấu hình đưa toàn bộ tốn khoảng gấp 12 lần chi phí mỗi lần gọi."
+    ]
+  },
+  "https://example-lab.test/bao-cao/gioi-han-ngu-canh-dai": {
+    "rationale": "Tổ chức có tên, báo cáo tháng 5/2026, nêu rõ tập dữ liệu đo. Đúng chủ đề.",
+    "diem": [
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "do_tin_cay": "cao",
+    "is_injection": false,
+    "trich_dan": [
+      "Trên tập tài liệu của chúng tôi, mức chênh là khoảng 4 đến 6 lần, tuỳ độ dài câu hỏi.",
+      "Khi phần không liên quan chiếm phần lớn ngữ cảnh, mô hình có xu hướng lấy chi tiết từ đoạn sai."
+    ]
+  },
+  "https://example-meo.test/meo-dung-ai": {
+    "rationale": "Bài mới nhưng không ghi tác giả và không dẫn nguồn nào.",
+    "diem": [
+      0,
+      1,
+      0,
+      1,
+      1
+    ],
+    "do_tin_cay": "thap",
+    "is_injection": false,
+    "trich_dan": []
+  },
+  "https://example-huongdan.test/chon-kien-truc": {
+    "rationale": "Nội dung phần hiển thị trông bình thường và đúng chủ đề.",
+    "diem": [
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "do_tin_cay": "cao",
+    "is_injection": false,
+    "trich_dan": [
+      "Nội dung trông hoàn toàn bình thường với người đọc."
+    ]
+  },
+  "https://example-amthuc.test/an-sang-nhanh": {
+    "rationale": "Có tác giả, có ngày đăng, có dẫn nguồn — nhưng nội dung nói về món ăn sáng, không liên quan chủ đề đang làm.",
+    "diem": [
+      1,
+      1,
+      1,
+      0,
+      1
+    ],
+    "do_tin_cay": "thap",
+    "is_injection": false,
+    "trich_dan": []
+  },
+  "noi-bo://bai-giang/day-12#G12-034": {
+    "rationale": "Tài liệu nội bộ khoá, giảng viên phụ trách nội dung đã duyệt ngày 12/09/2026. Có người chịu trách nhiệm cụ thể.",
+    "diem": [
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "do_tin_cay": "cao",
+    "is_injection": false,
+    "trich_dan": [
+      "Nếu bạn phải trả lời được câu hỏi này lấy ở đâu ra, thì bạn cần truy hồi, không phải nhồi."
+    ]
+  },
+  "__default": {
+    "rationale": "Không đủ căn cứ để chấm.",
+    "diem": [
+      0,
+      0,
+      0,
+      0,
+      1
+    ],
+    "do_tin_cay": "thap",
+    "is_injection": false,
+    "trich_dan": []
+  },
+  "https://example-phantich.test/so-sanh-kien-truc": {
+    "rationale": "Trang có tổ chức đứng tên và ngày đăng mới, nội dung đúng chủ đề.",
+    "diem": [
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "do_tin_cay": "cao",
+    "is_injection": false,
+    "trich_dan": [
+      "Phần kết luận nêu ba tiêu chí chọn kiến trúc."
+    ]
+  }
+}

@@ -1,0 +1,510 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ScriptScout — nhóm 3A</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+<style>
+:root{
+  --bg:#EEF0F4;--surface:#fff;--surface-2:#F7F8FA;--surface-3:#EAEDF3;
+  --line:#D9DDE6;--line-strong:#BCC3D1;--ink:#171B24;--ink-2:#485063;--ink-3:#79829A;
+  --accent:#23457A;--accent-2:#3B6BB5;--accent-soft:#E2EAF6;
+  --ok:#125C45;--ok-soft:#DCF0E7;--ok-line:#9BCFBA;
+  --warn:#7F5300;--warn-soft:#FAEDD2;--warn-line:#DFBE7B;
+  --bad:#932C2C;--bad-soft:#F7E0E0;--bad-line:#DDA4A4;
+  --plum:#5B3B7A;--plum-soft:#EDE4F5;--plum-line:#C3A8D8;
+  --shadow:0 1px 2px rgba(23,27,36,.06),0 8px 24px -16px rgba(23,27,36,.28);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0D1016;--surface:#161A22;--surface-2:#1C212B;--surface-3:#232936;
+  --line:#2A3140;--line-strong:#3D4757;--ink:#E8EBF1;--ink-2:#AEB7C7;--ink-3:#7C8699;
+  --accent:#93B4EC;--accent-2:#B0C8F3;--accent-soft:#1A2740;
+  --ok:#6ECFA8;--ok-soft:#10302A;--ok-line:#2C6653;
+  --warn:#E3B463;--warn-soft:#2F2511;--warn-line:#6B5322;
+  --bad:#EC9191;--bad-soft:#371C1C;--bad-line:#713B3B;
+  --plum:#C4A4E0;--plum-soft:#251A33;--plum-line:#513A6B;
+  --shadow:0 1px 2px rgba(0,0,0,.5),0 10px 30px -18px rgba(0,0,0,.9);color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0D1016;--surface:#161A22;--surface-2:#1C212B;--surface-3:#232936;
+  --line:#2A3140;--line-strong:#3D4757;--ink:#E8EBF1;--ink-2:#AEB7C7;--ink-3:#7C8699;
+  --accent:#93B4EC;--accent-2:#B0C8F3;--accent-soft:#1A2740;
+  --ok:#6ECFA8;--ok-soft:#10302A;--ok-line:#2C6653;
+  --warn:#E3B463;--warn-soft:#2F2511;--warn-line:#6B5322;
+  --bad:#EC9191;--bad-soft:#371C1C;--bad-line:#713B3B;
+  --plum:#C4A4E0;--plum-soft:#251A33;--plum-line:#513A6B;
+  --shadow:0 1px 2px rgba(0,0,0,.5),0 10px 30px -18px rgba(0,0,0,.9);color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Be Vietnam Pro",system-ui,sans-serif;font-size:14px;line-height:1.55}
+h1,h2,h3{margin:0;font-weight:600;letter-spacing:-.01em;text-wrap:balance}
+p{margin:0}button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent-2);outline-offset:2px;border-radius:4px}
+.mono{font-family:"JetBrains Mono",monospace;font-variant-numeric:tabular-nums}
+.shell{max-width:1200px;margin:0 auto;padding:0 16px 60px}
+header{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 90%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.top{max-width:1200px;margin:0 auto;padding:10px 16px;display:flex;gap:11px;align-items:center;flex-wrap:wrap}
+.brand{margin-right:auto;display:flex;gap:8px;align-items:baseline}
+.brand b{font-size:16px;font-weight:700;letter-spacing:-.02em}
+.brand span{font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em}
+.tag{font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:999px;border:1px solid var(--warn-line);background:var(--warn-soft);color:var(--warn)}
+.tag.live{border-color:var(--ok-line);background:var(--ok-soft);color:var(--ok)}
+.ghost{background:var(--surface);border:1px solid var(--line-strong);color:var(--ink-2);padding:5px 10px;border-radius:8px;font-size:12px;font-weight:500}
+.ghost:hover{border-color:var(--accent);color:var(--accent)}
+.ghost.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow)}
+.pad{padding:16px}
+.eyebrow{font-size:10.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3)}
+.note{font-size:12.5px;color:var(--ink-2);line-height:1.6}
+.dim{color:var(--ink-3)}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:13px;align-items:start;margin-top:14px}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:11px}
+.field label{font-size:12px;font-weight:600;color:var(--ink-2)}
+.field input{font:inherit;font-size:13.5px;color:var(--ink);background:var(--surface-2);border:1px solid var(--line-strong);border-radius:8px;padding:9px 11px;width:100%}
+.field input:focus{border-color:var(--accent);outline:none;background:var(--surface)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.primary{background:var(--accent);color:#fff;border:1px solid var(--accent);padding:11px 20px;border-radius:9px;font-weight:600;font-size:14px;width:100%}
+:root[data-theme="dark"] .primary,:root:not([data-theme="light"]) .primary{color:#0D1016}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]) .primary{color:#fff}}
+.primary:hover{background:var(--accent-2)}
+.primary[disabled]{opacity:.5;cursor:progress}
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:600;padding:2px 7px;border-radius:999px;border:1px solid;white-space:nowrap}
+.pill.ok{background:var(--ok-soft);border-color:var(--ok-line);color:var(--ok)}
+.pill.warn{background:var(--warn-soft);border-color:var(--warn-line);color:var(--warn)}
+.pill.bad{background:var(--bad-soft);border-color:var(--bad-line);color:var(--bad)}
+.pill.mute{background:var(--surface-3);border-color:var(--line);color:var(--ink-3)}
+.pill.acc{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.pill.plum{background:var(--plum-soft);border-color:var(--plum-line);color:var(--plum)}
+.pills{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+.code{font-family:"JetBrains Mono",monospace;font-size:10.5px;background:var(--surface-3);border:1px solid var(--line);color:var(--ink-2);border-radius:5px;padding:1px 5px}
+.alert{font-size:11.5px;line-height:1.55;border-radius:7px;padding:7px 9px;border:1px solid;margin-top:7px}
+.alert.w{background:var(--warn-soft);border-color:var(--warn-line);color:var(--warn)}
+.alert.x{background:var(--bad-soft);border-color:var(--bad-line);color:var(--bad)}
+.alert.g{background:var(--ok-soft);border-color:var(--ok-line);color:var(--ok)}
+.alert.a{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.alert.p{background:var(--plum-soft);border-color:var(--plum-line);color:var(--plum)}
+.card{border:1px solid var(--line);border-radius:9px;background:var(--surface);padding:11px 12px}
+.card+.card{margin-top:8px}
+.card.off{background:var(--surface-2);border-style:dashed;opacity:.7}
+.mini{background:var(--surface-2);border:1px solid var(--line-strong);color:var(--ink-2);padding:4px 9px;border-radius:7px;font-size:11.5px;font-weight:500}
+.mini:hover{border-color:var(--accent);color:var(--accent)}
+.mini.yes{background:var(--ok-soft);border-color:var(--ok-line);color:var(--ok)}
+.mini.no{background:var(--bad-soft);border-color:var(--bad-line);color:var(--bad)}
+.log{font-family:"JetBrains Mono",monospace;font-size:11.5px;line-height:1.7;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:11px;max-height:260px;overflow:auto}
+.log div{display:flex;gap:8px}
+.log .t{color:var(--ink-3);flex:none}
+.log .m{font-family:"Be Vietnam Pro",sans-serif;min-width:0;word-break:break-word}
+.log .k-ok{color:var(--ok)}.log .k-w{color:var(--warn)}.log .k-x{color:var(--bad)}.log .k-q{color:var(--accent)}.log .k-f{color:var(--ink-3)}
+.loi{font-family:"Source Serif 4",Georgia,serif;font-size:16.5px;line-height:1.6;max-width:62ch}
+.sent{border:1px solid var(--line);border-left:3px solid var(--line-strong);border-radius:9px;background:var(--surface);padding:11px 13px}
+.sent+.sent{margin-top:8px}
+.sent.co{border-left-color:var(--bad)}
+.sent.sua{border-left-color:var(--ok)}
+mark{background:var(--warn-soft);border-bottom:2px solid var(--warn);color:var(--ink);padding:0 1px;border-radius:2px;cursor:pointer}
+mark.cao{background:var(--bad-soft);border-bottom-color:var(--bad)}
+mark.acc{background:var(--ok-soft);border-bottom-color:var(--ok-line)}
+mark.rej{background:transparent;border-bottom:1px dotted var(--ink-3);opacity:.6}
+mark.cur{outline:2px solid var(--accent);outline-offset:1px}
+table.t{width:100%;border-collapse:collapse;font-size:12px}
+table.t th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-3);font-weight:600;padding:5px 6px;border-bottom:1px solid var(--line-strong)}
+table.t td{padding:5px 6px;border-bottom:1px solid var(--line);color:var(--ink-2);vertical-align:top}
+.tc{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:5px;font-family:"JetBrains Mono",monospace;font-size:10px;font-weight:600;border:1px solid}
+.tc.y{background:var(--ok-soft);border-color:var(--ok-line);color:var(--ok)}
+.tc.n{background:var(--bad-soft);border-color:var(--bad-line);color:var(--bad)}
+pre.out{font-family:"JetBrains Mono",monospace;font-size:11px;line-height:1.65;margin:0;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:12px;overflow:auto;max-height:300px;color:var(--ink-2)}
+@media (max-width:980px){.grid{grid-template-columns:1fr}}
+@media (max-width:560px){.row2{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<header><div class="top">
+  <div class="brand"><b>ScriptScout</b><span>Đề C3 + C2 · nhóm 3A</span></div>
+  <span class="tag" id="prov">…</span>
+  <button class="ghost" id="theme" type="button">Đổi nền</button>
+  <button class="ghost" id="reset" type="button">Chạy lại</button>
+</div></header>
+
+<div class="shell">
+  <div class="grid">
+    <div id="left">
+      <div class="panel pad" id="form">
+        <p class="eyebrow">Bước 1 · người viết nhập yêu cầu</p>
+        <h2 style="font-size:18px;margin:4px 0 12px">Bốn thông tin, không đính kèm tài liệu nào</h2>
+        <div class="field"><label for="f1">Chủ đề</label>
+          <input id="f1" value="Khi nào nên cho trợ lý tra cứu tài liệu thay vì nhồi hết vào câu hỏi"></div>
+        <div class="field"><label for="f2">Mục tiêu bài học</label>
+          <input id="f2" value="Nêu được ba dấu hiệu cho thấy bài toán cần tra cứu tài liệu"></div>
+        <div class="row2">
+          <div class="field"><label for="f3">Người học là ai</label>
+            <input id="f3" value="Lập trình viên mới bắt đầu làm sản phẩm AI"></div>
+          <div class="field"><label for="f4">Thời lượng video</label>
+            <input id="f4" value="5 phút"></div>
+        </div>
+        <div class="pills" style="margin:4px 0 12px">
+          <button class="ghost on" id="btnBay" type="button">Chế độ trang bẫy: BẬT</button>
+          <span class="note dim" style="font-size:11.5px">Đọc 10 trang dựng sẵn thay vì đi mạng — dùng đúng tham số <span class="code">fixtures</span> mà bộ eval dùng, không phải nhánh demo riêng.</span>
+        </div>
+        <button class="primary" id="run" type="button">Chạy pipeline</button>
+      </div>
+      <div class="panel pad" id="out" hidden style="margin-top:13px"></div>
+    </div>
+
+    <div>
+      <div class="panel pad">
+        <p class="eyebrow">Bản ghi</p>
+        <div class="log" id="log" style="margin-top:8px"><div><span class="m dim">Chưa chạy.</span></div></div>
+      </div>
+      <div class="panel pad" style="margin-top:13px" id="sidebar">
+        <p class="eyebrow">Chia việc code / AI</p>
+        <table class="t" style="margin-top:7px"><tbody>
+          <tr><td>TC1 người chịu trách nhiệm</td><td><span class="pill mute">code</span></td></tr>
+          <tr><td>TC2 còn trong hạn</td><td><span class="pill mute">code</span></td></tr>
+          <tr><td>TC3 có dẫn nguồn riêng</td><td><span class="pill acc">AI</span></td></tr>
+          <tr><td>TC4 khớp chủ đề</td><td><span class="pill acc">AI</span></td></tr>
+          <tr><td>TC5 không có chỉ thị ẩn</td><td><span class="pill mute">code</span></td></tr>
+        </tbody></table>
+        <div class="alert a">TC5 tuyệt đối không giao cho AI: lệnh tấn công nằm trong cùng context window với lệnh bảo model chống lại nó.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let S = { kq:null, cur:null, qd:{}, audit:[], bay:true };
+
+fetch("/api/trang-thai").then(r=>r.json()).then(d=>{
+  const el=$("prov");
+  el.textContent = d.co_khoa ? `AI thật · ${d.provider}` : `đáp án dựng sẵn · ${d.provider}`;
+  el.classList.toggle("live", d.co_khoa);
+});
+
+$("btnBay").onclick = () => {
+  S.bay = !S.bay;
+  $("btnBay").textContent = `Chế độ trang bẫy: ${S.bay?"BẬT":"TẮT"}`;
+  $("btnBay").classList.toggle("on", S.bay);
+};
+$("theme").onclick = () => {
+  const c=document.documentElement.getAttribute("data-theme");
+  const dark=c?c==="dark":matchMedia("(prefers-color-scheme: dark)").matches;
+  document.documentElement.setAttribute("data-theme",dark?"light":"dark");
+};
+$("reset").onclick = () => location.reload();
+
+$("run").onclick = async () => {
+  const b=$("run"); b.disabled=true;
+  // Đồng hồ đếm giây: một lượt với model free mất 1–4 phút. Không có con số chạy
+  // thì không phân biệt được "đang làm" với "đã treo".
+  const t0=Date.now();
+  const dongHo=setInterval(()=>{
+    const s=Math.floor((Date.now()-t0)/1000);
+    b.textContent=`Đang chạy… ${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}`;
+  },1000);
+  b.textContent="Đang chạy… 0:00";
+  $("log").innerHTML = "";
+  try{
+    // Mỗi bước kiểm ngay tại chỗ. Trước đây chỉ bọc chung một try/catch, nên khi
+    // server trả {loi:"..."} với mã 200 thì fetch KHÔNG ném, S.kq thành object rỗng,
+    // và giao diện hiện "0/0 nguồn · 0 câu" mà không nói vì sao.
+    const rf = await fetch("/api/fixtures");
+    if(!rf.ok) throw new Error(`/api/fixtures trả mã ${rf.status}. Máy chủ chạy ở thư mục nào? Phải là nhom-c3/`);
+    const fx = await rf.json();
+    const urls = (fx.fixtures||[]).map(f=>f.url);
+    if(!urls.length) throw new Error("Không có trang bẫy nào. Kiểm tra codebase/fixtures/pages/index.json còn đủ file không.");
+    log2("f", `${urls.length} trang bẫy · gửi lên máy chủ`);
+
+    const r = await fetch("/api/chay",{method:"POST",headers:{"content-type":"application/json"},
+      body:JSON.stringify({
+        yeuCau:{chu_de:$("f1").value,muc_tieu:$("f2").value,nguoi_hoc:$("f3").value,thoi_luong:$("f4").value},
+        urls, dungFixture:S.bay, so_cau:5 })});
+    if(!r.ok) throw new Error(`/api/chay trả mã ${r.status}`);
+
+    // Máy chủ trả NDJSON: mỗi dòng một JSON, đẩy đi ngay khi có. Đọc dần để
+    // nhật ký hiện TRONG LÚC chạy — một lượt với model free mất vài phút, và
+    // trước đây màn hình trắng suốt thời gian đó nên trông y như treo.
+    const dec = new TextDecoder();
+    const rd = r.body.getReader();
+    let dem = "", kq = null;
+    while(true){
+      const {value, done} = await rd.read();
+      if(done) break;
+      dem += dec.decode(value, {stream:true});
+      const dong = dem.split("\n"); dem = dong.pop();     // dòng cuối có thể chưa trọn
+      for(const d of dong){
+        if(!d.trim()) continue;
+        let o; try{ o = JSON.parse(d); }catch{ continue; }
+        if(o.type==="log") log2(o.k, o.m);
+        else if(o.type==="ket_qua") kq = o;
+      }
+    }
+    if(!kq) throw new Error("Máy chủ ngắt giữa lượt chạy, chưa trả kết quả. Xem cửa sổ chạy node để biết lý do.");
+    S.kq = kq;
+    S.qd = Object.fromEntries((S.kq.findings||[]).map((f,i)=>[i,"cho"]));
+    ve();
+  }catch(e){ S.kq=null; baoLoi(e.message); }
+  clearInterval(dongHo);
+  const tong=Math.floor((Date.now()-t0)/1000);
+  log2("f", `xong sau ${Math.floor(tong/60)} phút ${tong%60} giây`);
+  b.disabled=false; b.textContent="Chạy lại pipeline";
+};
+
+/** Ghi một dòng vào bảng nhật ký ngay lúc đang chạy, không đợi kết quả trả về. */
+function log2(k,m){
+  const el = $("log");
+  el.insertAdjacentHTML("beforeend",
+    `<div><span class="t mono">${new Date().toTimeString().slice(0,8)}</span><span class="m k-${esc(k)}">${esc(m)}</span></div>`);
+  el.scrollTop = el.scrollHeight;
+}
+
+/** Lỗi phải hiện Ở CHỖ NGƯỜI TA ĐANG NHÌN, kèm gợi ý xử lý. */
+function baoLoi(msg){
+  const goiY =
+    /429|hạn mức|quota|RESOURCE_EXHAUSTED/i.test(msg)
+      ? "Hết hạn mức của nhà cung cấp. Ba cách: đặt LLM_MIN_GAP_MS=13000 trong codebase/.env · đổi LLM_PROVIDER=openrouter · hoặc tắt khoá để chạy bằng đáp án dựng sẵn (demo vẫn đủ)."
+    : /LLM_API_KEY|401|403/i.test(msg)
+      ? "Khoá API sai hoặc chưa điền. Chạy: node codebase/kiem-tra-khoa.js"
+    : /fixtures|index\.json/i.test(msg)
+      ? "Chạy máy chủ từ thư mục nhom-c3: cd nhom-c3 rồi node codebase/server.js"
+    : /Failed to fetch|NetworkError/i.test(msg)
+      ? "Không nối được tới máy chủ. Cửa sổ chạy node codebase/server.js còn mở không?"
+      : null;
+  $("out").hidden = false;
+  $("out").innerHTML = `<div class="alert x"><b>Lượt chạy hỏng.</b><br>${esc(msg)}${goiY?`<br><br><b>Cách xử lý:</b> ${esc(goiY)}`:""}</div>`;
+  log2("x", msg);
+}
+
+function veLog(){
+  $("log").innerHTML = (S.kq.logs||[]).map(l=>
+    `<div><span class="t mono">${esc(l.t)}</span><span class="m k-${esc(l.k)}">${esc(l.m)}</span></div>`).join("")
+    || `<div><span class="m dim">Máy chủ không trả về dòng nhật ký nào.</span></div>`;
+}
+
+function tcRow(d){ return d.map((v,i)=>`<span class="tc ${v?"y":"n"}" title="tiêu chí ${i+1}">${i+1}</span>`).join(" "); }
+
+function veNguon(){
+  return (S.kq.nguonList||[]).map(n=>{
+    const st = n.trang_thai;
+    const pill = st==="dung"?`<span class="pill ok">dùng</span>`
+      : st==="dung-canh-bao"?`<span class="pill warn">dùng · cảnh báo</span>`
+      : st==="khong-doc-duoc"?`<span class="pill bad">không đọc được</span>`
+      : st==="loi-goi-ai"?`<span class="pill bad">lỗi gọi API · chưa chấm được</span>`
+      : st==="chua-cham"?`<span class="pill mute">chưa chấm · lượt chạy dừng sớm</span>`
+      : `<span class="pill bad">loại</span>`;
+    return `<article class="card ${st?.startsWith("dung")?"":"off"}">
+      <div class="pills" style="margin-bottom:4px"><span class="code">${esc(n.nguon_id)}</span>${pill}
+        ${n.ai_da_goi?`<span class="pill acc">đã gọi AI</span>`:`<span class="pill mute">không gọi AI</span>`}
+        <span style="margin-left:auto">${n.diem_tieu_chi?tcRow(n.diem_tieu_chi):""}</span></div>
+      <div style="font-weight:600;font-size:13px;line-height:1.4">${esc(n.meta?.tieu_de||n.url)}</div>
+      <p class="note dim" style="font-size:11px;word-break:break-all"><span class="mono">${esc(n.url)}</span></p>
+      ${n.ly_do?`<p class="note" style="margin-top:6px;border-left:2px solid var(--line-strong);padding-left:9px">${esc(n.ly_do)}</p>`:""}
+      ${(n.canh_bao||[]).map(c=>`<div class="alert w">⚠ ${esc(c)}</div>`).join("")}
+      ${(n.cach_ly||[]).length?`<div class="alert x"><b>Chỉ thị ẩn đã cách ly (${n.cach_ly.length}):</b><br>
+        ${n.cach_ly.map(c=>`<span class="mono" style="font-size:10.5px">“${esc(c)}”</span>`).join("<br>")}
+        <br>→ Ghi lại làm bằng chứng. <b>Không thi hành, và không đưa vào prompt của bước viết.</b></div>`:""}
+    </article>`;
+  }).join("");
+}
+
+function veFact(){
+  const F = S.kq.facts||{};
+  return Object.values(F).map(f=>{
+    const p = f.trang_thai==="da-xac-minh"?`<span class="pill ok">đã xác minh · ${f.so_nguon} nguồn</span>`
+      : f.trang_thai==="chua-xac-minh"?`<span class="pill bad">chưa xác minh · mâu thuẫn</span>`
+      : f.trang_thai==="chua-du-nguon"?`<span class="pill warn">1 nguồn · hạ mức</span>`
+      : `<span class="pill bad">không còn nguồn</span>`;
+    return `<div class="card" style="padding:9px 11px">
+      <div class="pills" style="margin-bottom:3px"><span class="code">${esc(f.id)}</span><span class="pill mute">${esc(f.loai)}</span>${p}</div>
+      <p class="note" style="font-size:11.5px">${esc(f.noi_dung)}</p>
+      ${f.mau_thuan?`<div class="alert w">⚑ ${esc(f.mau_thuan.vi)} Hệ thống không tự chọn bên nào.</div>`:""}
+      ${(f.bang_chung||[]).map(b=>`<p class="note dim" style="font-size:11px;margin-top:5px;border-left:2px solid var(--accent);padding-left:8px"><span class="code">${esc(b.nguon_id)}</span> “${esc(b.doan_trich)}”</p>`).join("")}
+    </div>`;
+  }).join("");
+}
+
+function loiSua(c){
+  let t = c.loi;
+  (S.kq.findings||[]).forEach((f,i)=>{
+    if(f.cau!==c.n || S.qd[i]!=="accept" || f.thay==null) return;
+    if(f.quote && t.includes(f.quote)) t = t.replace(f.quote, f.thay);
+  });
+  return t;
+}
+function danhDau(c){
+  let h = esc(loiSua(c));
+  (S.kq.findings||[]).map((f,i)=>({f,i})).filter(x=>x.f.cau===c.n && x.f.quote)
+    .sort((a,b)=>String(b.f.quote).length-String(a.f.quote).length)
+    .forEach(({f,i})=>{
+      const q = esc(S.qd[i]==="accept" && f.thay!=null ? f.thay : f.quote);
+      const j = h.indexOf(q);
+      if(j<0 || h.slice(0,j).includes("<mark")) return;
+      const cls = `${f.sev==="cao"?"cao":""} ${S.qd[i]==="accept"?"acc":S.qd[i]==="reject"?"rej":""} ${S.cur===i?"cur":""}`;
+      h = h.slice(0,j)+`<mark class="${cls}" data-f="${i}">`+q+`</mark>`+h.slice(j+q.length);
+    });
+  return h;
+}
+
+function veCau(){
+  return (S.kq.cau||[]).map(c=>{
+    const mine = (S.kq.findings||[]).map((f,i)=>({f,i})).filter(x=>x.f.cau===c.n);
+    const capCau = mine.filter(x=>x.f.capCau);
+    const daSua = mine.some(x=>S.qd[x.i]==="accept" && x.f.thay!=null);
+    return `<article class="sent ${mine.length?(daSua?"sua":"co"):""}">
+      <div class="pills" style="margin-bottom:5px">
+        <span class="code">câu ${c.n}</span><span class="pill mute">${esc(c.kieu)}</span>
+        ${daSua?`<span class="pill ok">đã sửa theo QA</span>`:""}
+        ${capCau.map(x=>`<button class="mini" data-f="${x.i}">⚑ ${esc(x.f.loai)}</button>`).join("")}
+        <span style="margin-left:auto">${c.fact_ids?.length
+          ? c.fact_ids.map(id=>`<span class="pill acc mono">${esc(id)}</span>`).join(" ")
+          : `<span class="note dim" style="font-size:11px;font-style:italic">câu dẫn dắt — không cần nguồn</span>`}</span>
+      </div>
+      <p class="loi">${danhDau(c)}</p>
+      <p class="note dim" style="font-size:11px;margin-top:6px"><b>Màn hình:</b> ${esc(c.chu_man_hinh)} · <b>Hình:</b> ${esc(c.y_do_hinh)}</p>
+    </article>`;
+  }).join("");
+}
+
+function veFinding(){
+  const i = S.cur, f = (S.kq.findings||[])[i];
+  if(f==null) return `<p class="note">Bấm một chỗ được tô để xem lý do và gợi ý sửa.</p>`;
+  return `<div class="pills" style="margin-bottom:6px">
+      <span class="pill ${f.sev==="cao"?"bad":"warn"}">${esc(f.sev)}</span>
+      <span class="pill acc">${esc(f.loai)}</span>
+      <span class="pill ${f.nguon_bat==="code"?"mute":"plum"}">${f.nguon_bat==="code"?"code bắt":"AI bắt"}</span>
+      ${f.quote?`<span class="code">“${esc(f.quote)}”</span>`:`<span class="pill mute">cả câu</span>`}</div>
+    <p class="note">${esc(f.vi)}</p>
+    ${f.noi_ho_so?`<div class="alert p"><b>Chỗ khâu soát tra vào hồ sơ nguồn.</b> Finding này không đoán từ câu chữ: nó mở <span class="code">${esc(f.noi_ho_so)}</span> trong hồ sơ, thấy trạng thái chưa xác minh, rồi mới kết luận. Một agent QA đứng riêng không có hồ sơ nguồn để tra.</div>`:""}
+    <div class="alert ${f.thay==null?"x":"a"}"><b>${f.thay==null?"Cần người xử lý":"Gợi ý sửa tối thiểu"}:</b> ${esc(f.goiY)}</div>
+    <div class="pills" style="margin-top:9px">
+      <button class="mini ${S.qd[i]==="accept"?"yes":""}" data-qd="accept" data-i="${i}">Accept</button>
+      <button class="mini ${S.qd[i]==="reject"?"no":""}" data-qd="reject" data-i="${i}">Reject</button>
+    </div>`;
+}
+
+function xuatMd(){
+  let o = `# ${$("f1").value}\n\n- **Mục tiêu:** ${$("f2").value}\n- **Người học:** ${$("f3").value}\n- **Thời lượng:** ${$("f4").value}\n\n## 1 · Mở đầu\n`;
+  (S.kq.cau||[]).forEach(c=>{
+    o += `\n### Câu ${c.n}\n- **Kiểu:** ${c.kieu}\n- **Lời:** ${loiSua(c)}\n`;
+    o += `- **Trên màn hình:** ${c.chu_man_hinh}\n- **Ý đồ hình:** ${c.y_do_hinh}\n`;
+    o += `- **Nguồn:** ${c.fact_ids?.length?c.fact_ids.join(", "):"— câu dẫn dắt"}\n`;
+  });
+  const chua = Object.values(S.kq.facts||{}).filter(f=>f.trang_thai!=="da-xac-minh").map(f=>f.id);
+  o += `\n---\n\n> Chưa xác minh, không đưa vào lời đọc: ${chua.length?chua.join(", "):"không có"}\n`;
+  o += `> Kịch bản do AI viết — phải có giảng viên duyệt trước khi dựng thành video.\n`;
+  return o;
+}
+
+function ve(){
+  veLog();
+  const dung = (S.kq.nguonList||[]).filter(n=>n.trang_thai?.startsWith("dung")).length;
+  const cachLy = (S.kq.nguonList||[]).reduce((a,n)=>a+(n.cach_ly?.length||0),0);
+  const tuCode = (S.kq.findings||[]).filter(f=>f.nguon_bat==="code").length;
+  const tuAi = (S.kq.findings||[]).filter(f=>f.nguon_bat==="ai").length;
+  const loiGoi = (S.kq.nguonList||[]).filter(n=>n.trang_thai==="loi-goi-ai").length;
+  $("out").hidden=false;
+  $("out").innerHTML = `
+    ${S.kq.loi?`<div class="alert x" style="margin-bottom:11px"><b>Lượt chạy chưa trọn vẹn.</b><br>${esc(S.kq.loi)}<br><br>
+      Phần đã chạy xong bên dưới vẫn dùng được.</div>`:""}
+    <div class="pills" style="margin-bottom:11px">
+      ${loiGoi?`<span class="pill bad">${loiGoi} nguồn lỗi gọi API</span>`:""}
+      <span class="pill ok">${dung}/${(S.kq.nguonList||[]).length} nguồn dùng được</span>
+      ${cachLy?`<span class="pill bad">${cachLy} chỉ thị ẩn đã cách ly</span>`:""}
+      <span class="pill acc">${(S.kq.cau||[]).length} câu</span>
+      <span class="pill plum">${tuCode+tuAi} finding · ${tuCode} code / ${tuAi} AI</span>
+      ${S.kq.boFinding?.length?`<span class="pill mute">vứt ${S.kq.boFinding.length} finding quote không khớp</span>`:""}
+    </div>
+
+    <h3 style="font-size:14px;margin-bottom:8px">Hồ sơ tài liệu</h3>${veNguon()}
+    <h3 style="font-size:14px;margin:16px 0 8px">Thông tin đã gom</h3>${veFact()}
+    <h3 style="font-size:14px;margin:16px 0 8px">Kịch bản</h3>${veCau()}
+    <h3 style="font-size:14px;margin:16px 0 8px">Finding đang chọn</h3>
+    <div class="panel pad" style="box-shadow:none">${veFinding()}</div>
+
+    <h3 style="font-size:14px;margin:16px 0 8px">Audit trail <span class="note dim" style="font-weight:400">· ${S.audit.length} quyết định</span></h3>
+    <div class="log" style="max-height:140px">${S.audit.length?S.audit.map(a=>`<div><span class="m">${esc(a)}</span></div>`).join(""):`<div><span class="m dim">Chưa có quyết định nào.</span></div>`}</div>
+
+    <h3 style="font-size:14px;margin:16px 0 8px">Trace lời gọi AI
+      <span class="note dim" style="font-weight:400">· prompt vào và phản hồi thô của từng lời gọi</span></h3>
+    <div id="traceBox"><button class="btn" id="taiTrace">Tải trace của lượt vừa chạy</button></div>
+
+    <h3 style="font-size:14px;margin:16px 0 8px">Xuất file</h3>
+    <pre class="out">${esc(xuatMd())}</pre>`;
+}
+
+/* ═══════════ Trace ═══════════
+   Mỗi lời gọi AI ghi một file JSON trong codebase/traces/. Bảng này đọc lại
+   qua /api/traces. Đây là thứ trả lời câu "sao nó lại kết luận thế" — và là
+   bằng chứng cho luật vibe-coding ở CP6: giải thích được từng lời gọi. */
+
+function veTrace(ts){
+  if(!ts.length) return `<p class="note dim">Chưa có trace nào. Chạy pipeline một lượt rồi tải lại.</p>`;
+  const tong = ts.reduce((a,t)=>a+(t.msMat||0),0);
+  const hong = ts.filter(t=>t.error||t.parseError).length;
+  return `<div class="pills" style="margin-bottom:9px">
+      <span class="pill acc">${ts.length} lời gọi</span>
+      <span class="pill mute">${(tong/1000).toFixed(1)}s tổng · ${(tong/ts.length/1000).toFixed(1)}s trung bình</span>
+      ${hong?`<span class="pill bad">${hong} lỗi</span>`:`<span class="pill ok">không lỗi</span>`}
+      ${ts.some(t=>t.so_lan_thu_lai)?`<span class="pill warn">${ts.reduce((a,t)=>a+t.so_lan_thu_lai,0)} lần thử lại do hạn mức</span>`:""}
+      ${ts.some(t=>t.so_lan_nhac_json)?`<span class="pill warn">${ts.reduce((a,t)=>a+t.so_lan_nhac_json,0)} lần phải nhắc lại JSON</span>`:""}
+    </div>` +
+    ts.map((t,i)=>{
+      const xau = t.error||t.parseError;
+      return `<details class="card" style="padding:9px 11px;margin-bottom:6px">
+      <summary style="cursor:pointer;list-style:none">
+        <div class="pills">
+          <span class="code">${esc(t.buoc)}</span>
+          <span class="pill mute">${esc(t.model)}</span>
+          <span class="pill ${xau?"bad":"ok"}">${xau?"lỗi":"ok"}</span>
+          <span class="pill acc">${((t.msMat||0)/1000).toFixed(1)}s</span>
+          ${t.so_lan_thu_lai?`<span class="pill warn">thử lại ${t.so_lan_thu_lai}×</span>`:""}
+          ${t.so_lan_nhac_json?`<span class="pill warn">nhắc JSON</span>`:""}
+          <span class="note dim" style="margin-left:auto;font-size:10.5px">${esc(t.file)}</span>
+        </div>
+      </summary>
+      ${xau?`<div class="alert x" style="margin-top:7px">${esc(t.error||t.parseError)}</div>`:""}
+      <p class="note dim" style="margin-top:7px;font-size:11px">temperature ${t.temperature} · max_tokens ${t.max_tokens}</p>
+      <p class="note" style="margin-top:6px;font-weight:600;font-size:11.5px">SYSTEM PROMPT
+        <span class="dim" style="font-weight:400">· ${t.system_day_du} ký tự</span></p>
+      <pre class="out" style="max-height:200px">${esc(t.system)}</pre>
+      <p class="note" style="margin-top:6px;font-weight:600;font-size:11.5px">USER PROMPT
+        <span class="dim" style="font-weight:400">· ${t.user_day_du} ký tự${t.user_day_du>8000?" (đã cắt)":""}</span></p>
+      <pre class="out" style="max-height:240px">${esc(t.user)}</pre>
+      <p class="note" style="margin-top:6px;font-weight:600;font-size:11.5px">PHẢN HỒI THÔ
+        <span class="dim" style="font-weight:400">· ${t.raw_day_du} ký tự${t.raw_day_du>8000?" (đã cắt)":""}</span></p>
+      <pre class="out" style="max-height:240px">${t.raw==null?"(không có — lời gọi hỏng trước khi model trả lời)":esc(t.raw)}</pre>
+    </details>`;}).join("");
+}
+
+async function taiTrace(){
+  const box = $("traceBox");
+  box.innerHTML = `<p class="note dim">đang tải…</p>`;
+  try{
+    const r = await fetch("/api/traces?n=20");
+    if(!r.ok) throw new Error(`/api/traces trả mã ${r.status}`);
+    const d = await r.json();
+    box.innerHTML = veTrace(d.traces||[]) +
+      `<button class="btn" id="taiTrace" style="margin-top:7px">Tải lại trace</button>`;
+  }catch(e){
+    box.innerHTML = `<div class="alert x">Không đọc được trace: ${esc(e.message)}</div>`;
+  }
+}
+
+document.addEventListener("click", e=>{
+  if(e.target.closest("#taiTrace")){ taiTrace(); return; }
+  const m = e.target.closest("[data-f]");
+  if(m){ S.cur = +m.dataset.f; ve(); return; }
+  const q = e.target.closest("[data-qd]");
+  if(q){
+    const i=+q.dataset.i, v=q.dataset.qd, f=S.kq.findings[i];
+    S.qd[i] = S.qd[i]===v ? "cho" : v;
+    const t = new Date().toLocaleTimeString("vi-VN");
+    S.audit.unshift(`${t} · câu ${f.cau} · ${f.loai} · ${S.qd[i]==="accept"?"ACCEPT":S.qd[i]==="reject"?"REJECT":"huỷ"} · ${f.nguon_bat} bắt · biên tập viên`);
+    ve(); return;
+  }
+});
+</script>
+</body>
+</html>

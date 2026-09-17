@@ -1,0 +1,119 @@
+# ══════════════════════════════════════════════════════════════════════
+#  .gitignore — K4-3A-E402-ABC (root)
+#
+#  Tổng hợp cho toàn bộ repo: React · Vite · TypeScript · Tailwind
+#  Express · Node.js · Google GenAI
+# ══════════════════════════════════════════════════════════════════════
+
+# ─── 1 · Khoá API và bí mật ─────────────────────────────────────────
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+secrets.json
+credentials*.json
+
+# ─── 2 · Dependencies ───────────────────────────────────────────────
+node_modules/
+.pnp
+.pnp.js
+.yarn/install-state.gz
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# ─── 3 · Build & Output ─────────────────────────────────────────────
+dist/
+build/
+out/
+.next/
+server.js.map
+*.tsbuildinfo
+
+# ─── 4 · DATA PACK CỦA BAN TỔ CHỨC ─────────────────────────────────
+# Luật: chỉ dùng trong hackathon · không chia sẻ · KHÔNG commit nguyên file.
+data/
+**/data/
+**/vlearn-pack/
+**/studio-pack/
+**/discord-pack/
+**/further-reading/
+
+# Chặn theo tên file data pack
+**/transcript-*-clean.md
+**/tutor_turns.csv
+**/k4_messages.csv
+**/k4_daily_reports.md
+**/d?-slide-hackathon.pdf
+**/cau-timecode-d1.*
+**/transcript-d1.txt
+**/kich-ban-d1.*
+**/loi-doc-d1-*.*
+
+# ─── 5 · Chặn theo ĐỊNH DẠNG — lưới an toàn cuối cùng ──────────────
+# File nặng / media / data. Muốn commit thì: git add -f <file>
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.wav
+*.mp3
+*.m4a
+*.pdf
+*.csv
+*.xlsx
+*.zip
+*.7z
+*.rar
+*.tar.gz
+
+# Ngoại lệ: file demo do NHÓM tự dựng
+!**/fixtures/**/*.csv
+!demo-slides.pdf
+
+# ─── 6 · Testing & Coverage ─────────────────────────────────────────
+coverage/
+*.lcov
+.nyc_output/
+__snapshots__/
+
+# ─── 7 · Traces & Logs ──────────────────────────────────────────────
+**/traces/*.json
+!**/traces/.gitkeep
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ─── 8 · Cache ──────────────────────────────────────────────────────
+.cache/
+.vite/
+.eslintcache
+.stylelintcache
+*.tscache
+.turbo/
+
+# ─── 9 · Rác hệ điều hành ──────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+ehthumbs.db
+ehthumbs_vista.db
+*.lnk
+
+# ─── 10 · Editor / IDE ─────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
+.project
+.classpath
+.settings/
+
+# ─── 11 · Antigravity / Gemini (AI tools) ──────────────────────────
+.gemini/
+.antigravity/

@@ -1,0 +1,120 @@
+{
+  "__default": {
+    "facts": [
+      {
+        "id": "t01",
+        "noi_dung": "Nhồi hết tài liệu vào câu hỏi và tra cứu trước rồi chỉ đưa phần liên quan là hai cách làm khác nhau.",
+        "loai": "định nghĩa",
+        "bang_chung": [
+          {
+            "nguon_id": "n01",
+            "doan_trich": "Hai kiến trúc này khác nhau ở chỗ tài liệu được đưa vào lúc nào: một bên đưa toàn bộ ở mỗi lần gọi, một bên chọn phần liên quan trước khi gọi."
+          },
+          {
+            "nguon_id": "n02",
+            "doan_trich": "Điểm chính xác không tăng đơn điệu theo lượng ngữ cảnh; ở các cấu hình dài nhất, điểm giảm so với cấu hình chọn lọc."
+          }
+        ]
+      },
+      {
+        "id": "t02",
+        "noi_dung": "Đưa thêm ngữ cảnh không tự động làm câu trả lời tốt hơn.",
+        "loai": "định nghĩa",
+        "bang_chung": [
+          {
+            "nguon_id": "n02",
+            "doan_trich": "Điểm chính xác không tăng đơn điệu theo lượng ngữ cảnh; ở các cấu hình dài nhất, điểm giảm so với cấu hình chọn lọc."
+          },
+          {
+            "nguon_id": "n05",
+            "doan_trich": "Khi phần không liên quan chiếm phần lớn ngữ cảnh, mô hình có xu hướng lấy chi tiết từ đoạn sai."
+          }
+        ]
+      },
+      {
+        "id": "t03",
+        "noi_dung": "Chi phí mỗi lần gọi khi nhồi toàn bộ tài liệu.",
+        "loai": "số liệu",
+        "bang_chung": [
+          {
+            "nguon_id": "n04",
+            "doan_trich": "Với tập tài liệu mẫu, cấu hình đưa toàn bộ tốn khoảng gấp 12 lần chi phí mỗi lần gọi."
+          },
+          {
+            "nguon_id": "n05",
+            "doan_trich": "Trên tập tài liệu của chúng tôi, mức chênh là khoảng 4 đến 6 lần, tuỳ độ dài câu hỏi."
+          }
+        ]
+      },
+      {
+        "id": "t04",
+        "noi_dung": "Ba dấu hiệu cho thấy nên chuyển sang tra cứu tài liệu.",
+        "loai": "định nghĩa",
+        "bang_chung": [
+          {
+            "nguon_id": "n01",
+            "doan_trich": "Ba trường hợp nên chọn truy hồi: tài liệu cập nhật thường xuyên, tài liệu vượt cửa sổ ngữ cảnh, và yêu cầu chỉ ra nguồn cho từng câu trả lời."
+          },
+          {
+            "nguon_id": "n09",
+            "doan_trich": "Nếu bạn phải trả lời được câu hỏi này lấy ở đâu ra, thì bạn cần truy hồi, không phải nhồi."
+          },
+          {
+            "nguon_id": "n02",
+            "doan_trich": "ĐOẠN TRÍCH BỊA — code phải loại"
+          }
+        ]
+      }
+    ],
+    "cau": [
+      {
+        "n": 1,
+        "kieu": "kể",
+        "loi": "Bạn có một tập tài liệu nội bộ, và bạn muốn trợ lý trả lời đúng theo tài liệu đó.",
+        "chu_man_hinh": "Tài liệu nội bộ · Trợ lý",
+        "y_do_hinh": "Chồng tài liệu bên trái, khung chat bên phải, chưa có đường nối.",
+        "fact_ids": []
+      },
+      {
+        "n": 2,
+        "kieu": "chốt",
+        "loi": "Việc lựa chọn giữa hai phương án được quyết định bởi đặc điểm của tài liệu.",
+        "chu_man_hinh": "Chọn theo tài liệu",
+        "y_do_hinh": "Hai nhánh rẽ từ chồng tài liệu.",
+        "fact_ids": [
+          "t01"
+        ]
+      },
+      {
+        "n": 3,
+        "kieu": "giảng",
+        "loi": "Đưa thêm ngữ cảnh không tự động làm câu trả lời tốt hơn.",
+        "chu_man_hinh": "Nhiều hơn ≠ tốt hơn",
+        "y_do_hinh": "Thanh ngữ cảnh dài ra, đường độ chính xác chùng xuống.",
+        "fact_ids": [
+          "t02"
+        ]
+      },
+      {
+        "n": 4,
+        "kieu": "giảng",
+        "loi": "Nhồi toàn bộ tài liệu vào mỗi lần gọi khiến chi phí tăng gấp 12 lần.",
+        "chu_man_hinh": "Chi phí mỗi lần gọi",
+        "y_do_hinh": "Hai cột chi phí, không ghi con số, nhãn MINH HỌA.",
+        "fact_ids": [
+          "t03"
+        ]
+      },
+      {
+        "n": 5,
+        "kieu": "dẫn",
+        "loi": "Hôm nay mình sẽ chỉ ra ba dấu hiệu cho thấy quý vị nên chuyển sang tra cứu tài liệu.",
+        "chu_man_hinh": "BA DẤU HIỆU",
+        "y_do_hinh": "Ba thẻ trống xếp ngang.",
+        "fact_ids": [
+          "t04"
+        ]
+      }
+    ]
+  }
+}

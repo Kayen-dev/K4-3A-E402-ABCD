@@ -1,0 +1,387 @@
+{
+  "ngay": "2026-09-17T05:46:54.556Z",
+  "provider": "gemini",
+  "tong": 28,
+  "dat": 24,
+  "ty_le": 85.7,
+  "quality_bar": 80,
+  "dat_bar": true,
+  "lop_3_hong": 1,
+  "cases": [
+    {
+      "id": "G01",
+      "lop": "①",
+      "dat": true,
+      "loi": [],
+      "thuc_te": {
+        "so_trich_dan": 2,
+        "so_hong": 0
+      }
+    },
+    {
+      "id": "G02",
+      "lop": "①",
+      "dat": true,
+      "loi": [],
+      "thuc_te": {
+        "quotes": [
+          "12"
+        ]
+      }
+    },
+    {
+      "id": "G03",
+      "lop": "①",
+      "dat": true,
+      "loi": [],
+      "thuc_te": {
+        "quotes": [
+          "Viện",
+          "Nghiên",
+          "Ngôn"
+        ]
+      }
+    },
+    {
+      "id": "G04",
+      "lop": "②",
+      "dat": true,
+      "loi": [],
+      "thuc_te": {
+        "trang_thai": "chua-du-nguon",
+        "so_nguon": 1,
+        "mau_thuan": false
+      }
+    },
+    {
+      "id": "G05",
+      "lop": "②",
+      "dat": true,
+      "loi": [],
+      "thuc_te": {
+        "trang_thai": "chua-xac-minh",
+        "so_nguon": 2,
+        "mau_thuan": true
+      }
+    },
+    {
+      "id": "G06",
+      "lop": "②",
+      "dat": true,
+      "loi": [],
+      "thuc_te": {
+        "trang_thai": "khong-con-nguon",
+        "so_nguon": 0,
+        "mau_thuan": false
+      }
+    },
+    {
+      "id": "G07",
+      "lop": "③",
+      "dat": true,
+      "loi": [],
+      "thuc_te": {
+        "trang_thai": "loai",
+        "diem": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "cach_ly": 2,
+        "ai": false
+      }
+    },
+    {
+      "id": "G08",
+      "lop": "③",
+      "dat": true,
+      "loi": [],
+      "thuc_te": {
+        "trang_thai": "loai",
+        "diem": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "cach_ly": 2,
+        "ai": false
+      }
+    },
+    {
+      "id": "G09",
+      "lop": "③",
+      "dat": true,
+      "loi": [],
+      "thuc_te": {
+        "trang_thai": "khong-con-nguon",
+        "so_nguon": 0,
+        "mau_thuan": false
+      }
+    },
+    {
+      "id": "G10",
+      "lop": "④",
+      "dat": true,
+      "loi": [],
+      "thuc_te": {
+        "trang_thai": "dung-canh-bao",
+        "diem": [
+          1,
+          0,
+          0,
+          1,
+          1
+        ],
+        "cach_ly": 0,
+        "ai": true
+      }
+    },
+    {
+      "id": "G11",
+      "lop": "④",
+      "dat": true,
+      "loi": [],
+      "thuc_te": {
+        "am_tiet": 26,
+        "co_finding": true
+      }
+    },
+    {
+      "id": "G12",
+      "lop": "④",
+      "dat": true,
+      "loi": [],
+      "thuc_te": {
+        "so_finding": 1,
+        "cac_cau": [
+          5
+        ]
+      }
+    },
+    {
+      "id": "G13",
+      "lop": "thường",
+      "dat": true,
+      "loi": [],
+      "thuc_te": {
+        "trang_thai": "dung",
+        "diem": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "cach_ly": 0,
+        "ai": true
+      }
+    },
+    {
+      "id": "G14",
+      "lop": "thường",
+      "dat": true,
+      "loi": [],
+      "thuc_te": {
+        "trang_thai": "loai",
+        "diem": [
+          0,
+          1,
+          0,
+          1,
+          1
+        ],
+        "cach_ly": 0,
+        "ai": true
+      }
+    },
+    {
+      "id": "G15",
+      "lop": "thường",
+      "dat": true,
+      "loi": [],
+      "thuc_te": {
+        "trang_thai": "khong-doc-duoc",
+        "diem": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "cach_ly": 0,
+        "ai": false
+      }
+    },
+    {
+      "id": "G16",
+      "lop": "thường",
+      "dat": true,
+      "loi": [],
+      "thuc_te": {
+        "trang_thai": "khong-doc-duoc",
+        "diem": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "cach_ly": 0,
+        "ai": false
+      }
+    },
+    {
+      "id": "G17",
+      "lop": "thường",
+      "dat": true,
+      "loi": [],
+      "thuc_te": {
+        "trang_thai": "da-xac-minh",
+        "so_nguon": 2,
+        "mau_thuan": false
+      }
+    },
+    {
+      "id": "G18",
+      "lop": "thường",
+      "dat": true,
+      "loi": [],
+      "thuc_te": {
+        "am_tiet": 20,
+        "co_finding": false
+      }
+    },
+    {
+      "id": "G19",
+      "lop": "thường",
+      "dat": true,
+      "loi": [],
+      "thuc_te": {
+        "am_tiet": 16,
+        "co_finding": false
+      }
+    },
+    {
+      "id": "G20",
+      "lop": "thường",
+      "dat": true,
+      "loi": [],
+      "thuc_te": {
+        "am_tiet": 21,
+        "co_finding": false
+      }
+    },
+    {
+      "id": "G21",
+      "lop": "thường",
+      "dat": true,
+      "loi": [],
+      "thuc_te": {
+        "so_finding": 0,
+        "cac_cau": []
+      }
+    },
+    {
+      "id": "G22",
+      "lop": "hiếm",
+      "dat": true,
+      "loi": [],
+      "thuc_te": {
+        "am_tiet": 25,
+        "co_finding": false
+      }
+    },
+    {
+      "id": "G23",
+      "lop": "hiếm",
+      "dat": true,
+      "loi": [],
+      "thuc_te": {
+        "bi_vut": 1,
+        "giu_tu_ai": 1
+      }
+    },
+    {
+      "id": "G24",
+      "lop": "hiếm",
+      "dat": true,
+      "loi": [],
+      "thuc_te": {
+        "trang_thai": "dung",
+        "diem": [
+          1,
+          1,
+          1,
+          0,
+          1
+        ],
+        "cach_ly": 0,
+        "ai": true
+      }
+    },
+    {
+      "id": "G25",
+      "lop": "①",
+      "dat": false,
+      "loi": [
+        "0 finding",
+        "không có finding nào chứa \"Google\""
+      ],
+      "thuc_te": {
+        "quotes": []
+      }
+    },
+    {
+      "id": "G26",
+      "lop": "③",
+      "dat": false,
+      "loi": [
+        "trang_thai=dung, cần loai",
+        "cach_ly=0"
+      ],
+      "thuc_te": {
+        "trang_thai": "dung",
+        "diem": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "cach_ly": 0,
+        "ai": true
+      }
+    },
+    {
+      "id": "G27",
+      "lop": "②",
+      "dat": false,
+      "loi": [
+        "trang_thai=da-xac-minh, cần chua-xac-minh",
+        "mau_thuan=false"
+      ],
+      "thuc_te": {
+        "trang_thai": "da-xac-minh",
+        "so_nguon": 2,
+        "mau_thuan": false
+      }
+    },
+    {
+      "id": "G28",
+      "lop": "④",
+      "dat": false,
+      "loi": [
+        "0 finding, cần 1",
+        "không báo câu 5"
+      ],
+      "thuc_te": {
+        "so_finding": 0,
+        "cac_cau": []
+      }
+    }
+  ]
+}

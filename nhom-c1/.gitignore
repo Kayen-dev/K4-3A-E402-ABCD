@@ -1,0 +1,83 @@
+# ══════════════════════════════════════════════════════════════════════
+#  .gitignore của repo nộp bài — nhom-c3
+#
+#  ĐỌC TRƯỚC: file này CHỈ có tác dụng với thứ nằm TRONG nhom-c3/.
+#  Nó KHÔNG che được data/ của ban tổ chức, vì data/ nằm ở thư mục CHA.
+#  Muốn an toàn thật thì đọc AN-TOAN-DU-LIEU.md — phải `git init` ngay
+#  tại nhom-c3/, không được push cái repo clone của BTC ở thư mục cha.
+#
+#  Soát trước khi push:  node soat-an-toan.js
+# ══════════════════════════════════════════════════════════════════════
+
+# ─── 1 · Khoá API và bí mật ─────────────────────────────────────────
+# .env.example thì ĐƯỢC commit (chỉ là file mẫu, không có khoá thật).
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+secrets.json
+credentials*.json
+
+# ─── 2 · DATA PACK CỦA BAN TỔ CHỨC ──────────────────────────────────
+# Luật data pack: chỉ dùng trong phạm vi hackathon · không chia sẻ ra ngoài
+# khoá · KHÔNG commit nguyên file vào repo nộp bài (được trích ngắn bằng mã
+# đoạn [Txx-NNN]).
+#
+# Chặn theo TÊN THƯ MỤC ở mọi độ sâu, phòng trường hợp ai đó copy pack vào
+# trong nhom-c3/ cho tiện chạy thử rồi quên xoá.
+data/
+**/data/
+**/vlearn-pack/
+**/studio-pack/
+**/discord-pack/
+**/further-reading/
+
+# Chặn thêm theo TÊN FILE, phòng trường hợp copy lẻ từng file ra ngoài pack.
+**/transcript-*-clean.md
+**/tutor_turns.csv
+**/k4_messages.csv
+**/k4_daily_reports.md
+**/d?-slide-hackathon.pdf
+**/cau-timecode-d1.*
+**/transcript-d1.txt
+**/kich-ban-d1.*
+**/loi-doc-d1-*.*
+
+# ─── 3 · Chặn theo ĐỊNH DẠNG — lưới an toàn cuối cùng ───────────────
+# Data pack toàn file nặng và file media. Nếu lọt qua hai lớp trên thì
+# phần lớn vẫn bị chặn ở đây. Muốn commit một file thuộc các loại này
+# thì phải cố ý: git add -f <file>.
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.wav
+*.mp3
+*.m4a
+*.pdf
+*.csv
+*.xlsx
+*.zip
+*.7z
+*.rar
+
+# Ngoại lệ: file demo do NHÓM tự dựng, không phải của BTC.
+!codebase/fixtures/**/*.csv
+!demo-slides.pdf
+
+# ─── 4 · Sinh ra lúc chạy ───────────────────────────────────────────
+node_modules/
+codebase/traces/*.json
+!codebase/traces/.gitkeep
+*.log
+npm-debug.log*
+
+# ─── 5 · Rác hệ điều hành và trình soạn thảo ────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
+*~

@@ -1,0 +1,2 @@
+Thư mục này chứa trace của từng lời gọi AI (CP3 yêu cầu).
+Mỗi file: prompt vào, phản hồi thô, thời gian chạy. Không chứa API key.

@@ -1,0 +1,24 @@
+{
+  "__default": {
+    "findings": [
+      {
+        "n": 2,
+        "quote": "được quyết định bởi",
+        "loai": "translationese",
+        "sev": "cao",
+        "vi": "Bị động kiểu dịch, văn nói tiếng Việt hiếm khi nói như vậy.",
+        "goiY": "phụ thuộc vào",
+        "thay": "phụ thuộc vào"
+      },
+      {
+        "n": 3,
+        "quote": "một cách hoàn toàn tự động",
+        "loai": "translationese",
+        "sev": "trung bình",
+        "vi": "BẪY TEST: chuỗi này KHÔNG có trong câu 3 — hệ thống phải vứt finding này.",
+        "goiY": "—",
+        "thay": null
+      }
+    ]
+  }
+}
