@@ -1,5 +1,5 @@
-import React from 'react';
-import { FileText } from 'lucide-react';
+import React from "react";
+import { FileText, Home } from "lucide-react";
 
 interface HeaderProps {
   onReset: () => void;
@@ -8,42 +8,44 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ onReset, onGoToStep1 }) => {
   return (
-    <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200 shadow-xs">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        {/* Brand Logo */}
-        <div 
-          onClick={onGoToStep1} 
-          className="flex items-center space-x-3 cursor-pointer group"
+    <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/85 shadow-xs backdrop-blur-xl">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        <button
+          onClick={onGoToStep1}
+          className="group flex items-center gap-3 text-left"
           id="btn-header-home"
         >
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-violet-600 flex items-center justify-center text-white shadow-md shadow-indigo-200 group-hover:scale-105 transition-transform">
-            <FileText className="w-5 h-5" />
+          <div className="flex size-10 items-center justify-center rounded-2xl bg-gradient-to-tr from-slate-950 via-indigo-700 to-sky-500 text-white shadow-md shadow-indigo-200 transition-transform group-hover:scale-105">
+            <FileText className="size-5" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-heading font-extrabold text-xl tracking-tight text-slate-900">
+              <span className="font-heading text-xl font-black tracking-tight text-slate-950">
                 ScriptScout
               </span>
-              <span className="hidden sm:inline text-[11px] font-semibold tracking-wide uppercase px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 shadow-xs">
-                BẢN LÀM VIỆC
+              <span className="hidden rounded-full border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-indigo-700 sm:inline">
+                Studio
               </span>
             </div>
-            <p className="text-xs text-slate-500 font-medium hidden sm:block">
-              Duyệt nguồn chuẩn giảng viên &amp; Tạo kịch bản có dẫn chứng
+            <p className="hidden text-xs font-medium text-slate-500 sm:block">
+              Research nguồn · Viết kịch bản · Duyệt bằng chứng
             </p>
           </div>
-        </div>
+        </button>
 
-        <div className="flex items-center space-x-3">
-          <button onClick={onReset} className="shrink-0 text-sm text-indigo-700 hover:underline">Các phiên</button>
-
-          <div className="flex items-center space-x-2" id="user-profile-badge">
-            <div className="hidden sm:flex w-8 h-8 rounded-full bg-indigo-100 border border-indigo-300 items-center justify-center text-indigo-700 font-bold text-xs shadow-xs">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <button
+            onClick={onReset}
+            className="inline-flex min-h-10 items-center gap-2 rounded-xl px-3 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+          >
+            <Home className="size-4" />
+            <span className="hidden sm:inline">Trang chính</span>
+          </button>
+          <div className="hidden items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-sm md:flex">
+            <span className="flex size-6 items-center justify-center rounded-full bg-indigo-100 text-indigo-700">
               GV
-            </div>
-            <span className="text-xs font-medium text-slate-700 hidden md:inline">
-              Giảng viên / Soạn kịch bản
             </span>
+            Giảng viên / Biên tập viên
           </div>
         </div>
       </div>

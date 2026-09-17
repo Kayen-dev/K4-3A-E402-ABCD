@@ -225,10 +225,15 @@ export async function soatVanNoi(cauList, factsById, dangDung, { boQuaAI = false
             (f.thay !== null && (typeof f.thay !== "string" || f.thay.length > 400))) {
           boFinding.push({ vi_sao_bo: "đầu ra không đúng schema" }); continue;
         }
-        const cau = cauList.find(c => c.n === f.n);
+        let soCau = Number.isInteger(f.n) ? f.n : (Number.isInteger(f.cau) ? f.cau : null);
+        if (soCau == null) {
+          const khop = cauList.filter(c => String(c.loi).includes(f.quote));
+          if (khop.length === 1) soCau = khop[0].n;
+        }
+        const cau = cauList.find(c => c.n === soCau);
         if (!cau) { boFinding.push({ ...f, vi_sao_bo: "số câu không tồn tại" }); continue; }
         // indexOf: không tìm thấy chuỗi nguyên văn → VỨT. Ưu tiên precision.
-        const { giu, bo } = locFindingHopLe(cau, [{ ...f, cau: f.n }]);
+        const { giu, bo } = locFindingHopLe(cau, [{ ...f, n: soCau, cau: soCau }]);
         giu.forEach(x => findings.push({ ...x, nguon_bat: "ai" }));
         bo.forEach(x => boFinding.push({ ...x, vi_sao_bo: "quote không khớp nguyên văn câu" }));
       }

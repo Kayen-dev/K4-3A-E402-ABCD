@@ -165,7 +165,7 @@
         "co_mau_thuan": true
       },
       "vi_sao": "Đề nói rõ: không được im lặng chọn một cái. Phải nêu cả hai và chuyển người duyệt.",
-      "nguon_du_lieu": null,
+      "nguon_du_lieu": "data/studio-pack/c3-scriptscout/vi-du/ho-so-nguon-mau.json · t03, n04, n05 · phát triển từ evidence/mining-kich-ban-d1.md",
       "can_khoa_that": false
     },
     {
@@ -270,7 +270,7 @@
         "tieu_chi_2": 0
       },
       "vi_sao": "Đặc thù nghiệp vụ: chủ đề AI đổi theo tháng, đúng lúc viết có thể sai lúc video lên sóng. Nhưng quá hạn không phải lý do để vứt — vẫn dùng được cho phần ví dụ.",
-      "nguon_du_lieu": null,
+      "nguon_du_lieu": "data/studio-pack/c3-scriptscout/vi-du/ho-so-nguon-mau.json · n04 · phát triển từ evidence/mining-kich-ban-d1.md",
       "can_khoa_that": false
     },
     {
@@ -346,7 +346,7 @@
         "tieu_chi_1": 0
       },
       "vi_sao": "Tiêu chí 1 do code quyết, không phụ thuộc model — trang không có meta author và không có og:site_name thì trượt.",
-      "nguon_du_lieu": null,
+      "nguon_du_lieu": "data/studio-pack/c3-scriptscout/vi-du/ho-so-nguon-mau.json · n03 · phát triển từ evidence/mining-kich-ban-d1.md",
       "can_khoa_that": false
     },
     {
@@ -417,7 +417,7 @@
         "trang_thai": "da-xac-minh",
         "so_nguon": 2
       },
-      "nguon_du_lieu": null,
+      "nguon_du_lieu": "data/studio-pack/c3-scriptscout/vi-du/ho-so-nguon-mau.json · n01, n02 · phát triển từ evidence/mining-kich-ban-d1.md",
       "can_khoa_that": false
     },
     {
