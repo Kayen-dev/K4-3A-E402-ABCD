@@ -159,11 +159,13 @@ Ghi checklist tiến độ ngắn ngay dưới đây khi execute để resume kh
 
 ### Checklist thực thi
 
-- [ ] UI kế thừa build/chạy trong đích
+- [x] UI kế thừa build/chạy trong đích
 - [ ] Research thật và duyệt nguồn
 - [ ] Draft/citation/rewrite đúng dependency
-- [ ] QA/undo/reload/read-aloud/export
+- [ ] QA/undo/reload/read-aloud/export (API và build đã kiểm; còn kiểm tra trực quan/giọng đọc trên thiết bị)
 - [ ] Regression, injection, accuracy và latency report
-- [ ] README và giới hạn thực tế
+- [x] README và giới hạn thực tế
+
+Tiến độ 2026-09-17: baseline stub 28/28, bộ QA tổng hợp 10/10. Đã nối API phiên, Tavily adapter, duyệt nguồn, draft, QA, export, private Blob adapter; chưa nghiệm thu live vì môi trường chưa có Tavily/LLM key và chưa có data người dùng. Vercel build preview thành công; production chờ private store/protection và kiểm tra endpoint sau deploy.
 
 Tài liệu khi cần: [schema](https://developers.openai.com/api/docs/guides/structured-outputs), [agent safety](https://developers.openai.com/api/docs/guides/agent-builder-safety), [latency](https://developers.openai.com/api/docs/guides/latency-optimization). Schema/prompt giúp giảm rủi ro, không thay kiểm chứng nội dung.

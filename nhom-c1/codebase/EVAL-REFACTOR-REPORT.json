@@ -1,0 +1,122 @@
+{
+  "date": "2026-09-17T12:12:39.877Z",
+  "dataset": "fixtures/qa-cases.json",
+  "provider": "stub",
+  "scope": "deterministic rules only",
+  "cases": [
+    {
+      "id": "Q01",
+      "provenance": "synthetic",
+      "expected": "cau-dai",
+      "passed": true,
+      "found": [
+        "cau-dai"
+      ],
+      "reviewer": "pending-human"
+    },
+    {
+      "id": "Q02",
+      "provenance": "synthetic",
+      "expected": "xung-ho",
+      "passed": true,
+      "found": [
+        "xung-ho"
+      ],
+      "reviewer": "pending-human"
+    },
+    {
+      "id": "Q03",
+      "provenance": "synthetic",
+      "expected": "lap-filler",
+      "passed": true,
+      "found": [
+        "lap-filler"
+      ],
+      "reviewer": "pending-human"
+    },
+    {
+      "id": "Q04",
+      "provenance": "synthetic",
+      "expected": "lap-filler",
+      "passed": true,
+      "found": [
+        "lap-filler"
+      ],
+      "reviewer": "pending-human"
+    },
+    {
+      "id": "Q05",
+      "provenance": "synthetic",
+      "expected": "pronunciation-only",
+      "passed": true,
+      "found": [
+        "pronunciation-only"
+      ],
+      "reviewer": "pending-human"
+    },
+    {
+      "id": "Q06",
+      "provenance": "synthetic",
+      "expected": "pronunciation-only",
+      "passed": true,
+      "found": [
+        "pronunciation-only"
+      ],
+      "reviewer": "pending-human"
+    },
+    {
+      "id": "Q07",
+      "provenance": "synthetic",
+      "expected": null,
+      "passed": true,
+      "found": [],
+      "reviewer": "pending-human"
+    },
+    {
+      "id": "Q08",
+      "provenance": "synthetic",
+      "expected": null,
+      "passed": true,
+      "found": [],
+      "reviewer": "pending-human"
+    },
+    {
+      "id": "Q09",
+      "provenance": "synthetic",
+      "expected": "thieu-can-cu",
+      "passed": true,
+      "found": [
+        "thieu-can-cu"
+      ],
+      "reviewer": "pending-human"
+    },
+    {
+      "id": "Q10",
+      "provenance": "synthetic",
+      "expected": "thieu-can-cu",
+      "passed": true,
+      "found": [
+        "thieu-can-cu"
+      ],
+      "reviewer": "pending-human"
+    }
+  ],
+  "passed": 10,
+  "total": 10,
+  "lifecycle": {
+    "acceptUndoReload": true,
+    "revisionConflict": true,
+    "sourceDependency": true,
+    "privateUrlBlock": true
+  },
+  "latencyMs": {
+    "count": 10,
+    "median": 0.06310000000000571,
+    "max": 8.639400000000002,
+    "note": "local rule execution only; no web or model latency"
+  },
+  "limitations": [
+    "All QA labels are synthetic and await human review.",
+    "No live search, LLM quality, citation semantic support, or user UX rate measured."
+  ]
+}

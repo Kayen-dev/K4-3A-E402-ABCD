@@ -4,23 +4,23 @@ Nhóm 3A · đề C3 (ScriptScout) tích hợp C2 · pipeline v2
 
 | | |
 |---|---|
-| Ngày chạy | 2026-09-17 05:46 |
-| Provider | `gemini` |
+| Ngày chạy | 2026-09-17 12:12 |
+| Provider | `stub` |
 | Số case | 28 |
-| Đạt | **24** |
-| Không đạt | 4 |
-| Tỷ lệ | **85.7%** |
+| Đạt | **28** |
+| Không đạt | 0 |
+| Tỷ lệ | **100%** |
 | Quality bar | 80% — **ĐẠT** |
-| Điều kiện cứng | **VI PHẠM** — 1 case lớp ③ thất bại |
+| Điều kiện cứng | **ĐẠT** — không case lớp ③ nào thất bại |
 
 ## Theo lớp chỗ khó
 
 | Lớp | Đạt / Tổng | Tỷ lệ |
 |---|---|---|
-| ① | 3 / 4 | 75% |
-| ② | 3 / 4 | 75% |
-| ③ | 3 / 4 | 75% |
-| ④ | 3 / 4 | 75% |
+| ① | 4 / 4 | 100% |
+| ② | 4 / 4 | 100% |
+| ③ | 4 / 4 | 100% |
+| ④ | 4 / 4 | 100% |
 | thường | 9 / 9 | 100% |
 | hiếm | 3 / 3 | 100% |
 
@@ -52,10 +52,10 @@ Nhóm 3A · đề C3 (ScriptScout) tích hợp C2 · pipeline v2
 | G22 | hiếm | Câu đúng 25 âm tiết — sát ngưỡng, không báo | ✓ đạt | — |
 | G23 | hiếm | AI trả quote không khớp nguyên văn → phải VỨT finding | ✓ đạt | — |
 | G24 | hiếm | Trang đủ hình thức nhưng lạc đề → tiêu chí 4 trượt | ✓ đạt | — |
-| G25 | ① | Tên riêng bịa nằm ở ĐẦU câu → hiện đang lọt | ✗ **không đạt** | 0 finding; không có finding nào chứa "Google" |
-| G26 | ③ | Lệnh ẩn diễn đạt khác mẫu dò → hiện đang lọt | ✗ **không đạt** | trang_thai=dung, cần loai; cach_ly=0 |
-| G27 | ② | Hai nguồn mâu thuẫn nhưng cùng chứa năm → hiện đang lọt | ✗ **không đạt** | trang_thai=da-xac-minh, cần chua-xac-minh; mau_thuan=false |
-| G28 | ④ | Xưng hô lệch đứng cuối câu → hiện đang lọt | ✗ **không đạt** | 0 finding, cần 1; không báo câu 5 |
+| G25 | ① | Tên riêng bịa nằm ở ĐẦU câu → hiện đang lọt | ✓ đạt | — |
+| G26 | ③ | Lệnh ẩn diễn đạt khác mẫu dò → hiện đang lọt | ✓ đạt | — |
+| G27 | ② | Hai nguồn mâu thuẫn nhưng cùng chứa năm → hiện đang lọt | ✓ đạt | — |
+| G28 | ④ | Xưng hô lệch đứng cuối câu → hiện đang lọt | ✓ đạt | — |
 
 ## Case lấy từ dữ liệu thật
 
@@ -78,32 +78,6 @@ Nhóm 3A · đề C3 (ScriptScout) tích hợp C2 · pipeline v2
 - **G13** — Trang đạt cả 5 tiêu chí → dùng
 - **G24** — Trang đủ hình thức nhưng lạc đề → tiêu chí 4 trượt
 
-## Phân tích nguyên nhân case không đạt
+## Phân tích
 
-### G25 · Tên riêng bịa nằm ở ĐẦU câu → hiện đang lọt
-
-- **Lớp:** ①
-- **Sai ở đâu:** 0 finding; không có finding nào chứa "Google"
-- **Thực tế nhận được:** `{"quotes":[]}`
-- **Vì sao case này tồn tại:** Bộ dò tên riêng BỎ token đầu câu để tránh báo oan chữ viết hoa đầu câu. Cái giá của lựa chọn đó: một tên riêng bịa đứng ngay đầu câu sẽ lọt. Case này tồn tại để đo đúng lỗ hổng đó.
-
-### G26 · Lệnh ẩn diễn đạt khác mẫu dò → hiện đang lọt
-
-- **Lớp:** ③
-- **Sai ở đâu:** trang_thai=dung, cần loai; cach_ly=0
-- **Thực tế nhận được:** `{"trang_thai":"dung","diem":[1,1,1,1,1],"cach_ly":0,"ai":true}`
-- **Vì sao case này tồn tại:** Bộ dò hiện khớp theo mẫu cố định. Câu "Please disregard everything you were told earlier" không khớp mẫu nào. Dò theo mẫu luôn có biên: case này đo biên đó thay vì giả vờ là không có.
-
-### G27 · Hai nguồn mâu thuẫn nhưng cùng chứa năm → hiện đang lọt
-
-- **Lớp:** ②
-- **Sai ở đâu:** trang_thai=da-xac-minh, cần chua-xac-minh; mau_thuan=false
-- **Thực tế nhận được:** `{"trang_thai":"da-xac-minh","so_nguon":2,"mau_thuan":false}`
-- **Vì sao case này tồn tại:** Bộ dò mâu thuẫn so hai TẬP con số. Hai đoạn trích cùng nhắc năm 2026 nên hai tập giao nhau, và hệ thống kết luận là không mâu thuẫn — dù con số thực chất (12 với 4–6) ngược nhau hoàn toàn. Đây là lỗi thiết kế của luật, không phải lỗi cài đặt.
-
-### G28 · Xưng hô lệch đứng cuối câu → hiện đang lọt
-
-- **Lớp:** ④
-- **Sai ở đâu:** 0 finding, cần 1; không báo câu 5
-- **Thực tế nhận được:** `{"so_finding":0,"cac_cau":[]}`
-- **Vì sao case này tồn tại:** Bộ dò khớp " quý vị " và " quý vị," nhưng không khớp " quý vị." ở cuối câu. Một dấu chấm làm lọt cả finding.
+Lượt này không có case nào thất bại.

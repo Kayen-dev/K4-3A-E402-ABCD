@@ -35,7 +35,7 @@ export function cauHinh() {
   const modelTheoNha = {
     gemini:     e.GEMINI_MODEL     || "gemini-3.6-flash",
     anthropic:  e.ANTHROPIC_MODEL  || "claude-sonnet-4-20250514",
-    openai:     e.OPENAI_MODEL     || "gpt-4o-mini",
+    openai:     e.OPENAI_MODEL     || "gpt-4.1-mini",
     openrouter: e.OPENROUTER_MODEL || "openrouter/free",
     stub:       "(đáp án dựng sẵn)",
   };
@@ -49,7 +49,7 @@ export function cauHinh() {
     timeout_ms:  so(e.LLM_TIMEOUT_MS, 30000),
     // Hạn mức: khoảng cách tối thiểu giữa hai lời gọi, và số lần thử lại khi bị 429.
     min_gap_ms:  so(e.LLM_MIN_GAP_MS, 0),
-    max_retry:   so(e.LLM_MAX_RETRY, 3),
+    max_retry:   so(e.LLM_MAX_RETRY, 1),
     retry_cap_ms: so(e.LLM_RETRY_CAP_MS, 65000),
     endpoint: {
       gemini:     e.GEMINI_BASE_URL     || "https://generativelanguage.googleapis.com/v1beta",
@@ -71,6 +71,13 @@ export function cauHinh() {
 
 let hangDoi = Promise.resolve();
 let lanGoiCuoi = 0;
+let activeCalls = 0;
+const waitingCalls = [];
+async function acquireCall() {
+  if (activeCalls >= 4) await new Promise(resolve => waitingCalls.push(resolve));
+  activeCalls++;
+  return () => { activeCalls--; waitingCalls.shift()?.(); };
+}
 
 const nghi = (ms) => new Promise(r => setTimeout(r, ms));
 
@@ -157,6 +164,7 @@ let traceCount = 0;
 
 /** Ghi lại một lời gọi ra file. Không bao giờ ghi API key. */
 async function trace(name, payload) {
+  if (process.env.LLM_TRACE !== '1') return;
   try {
     await mkdir(TRACE_DIR, { recursive: true });
     const stamp = new Date().toISOString().replace(/[:.]/g, "-");
@@ -353,6 +361,7 @@ export async function askJson({ name, system, user, stubKey, onLog }) {
   for (let lan = 0; ; lan++) {
     // Xếp hàng + giãn cách. Chế độ stub không đi mạng nên không cần chờ.
     const moKhoa = provider === "stub" ? null : await xepHang(c.min_gap_ms);
+    const releaseCall = provider === "stub" ? null : await acquireCall();
     if (lan === 0) onLog?.("f", `${name} · gọi ${c.model}…`);
     try {
       raw = await motLan(nhacJson);
@@ -371,6 +380,7 @@ export async function askJson({ name, system, user, stubKey, onLog }) {
       }
     } finally {
       moKhoa?.();
+      releaseCall?.();
     }
 
     // Model trả văn xuôi thay vì JSON: gọi lại MỘT lần với lời nhắc gắt hơn.

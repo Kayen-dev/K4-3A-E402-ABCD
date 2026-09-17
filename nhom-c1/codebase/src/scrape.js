@@ -9,6 +9,8 @@
 
 import { readFile, readdir } from "node:fs/promises";
 import { join } from "node:path";
+import { lookup } from "node:dns/promises";
+import { isIP } from "node:net";
 import "./env.js";
 import { doLenhAn } from "./rules.js";
 
@@ -19,6 +21,25 @@ export const cauHinhTai = () => ({
   max_chars:  SO(process.env.SCRAPE_MAX_CHARS, 12000),
   user_agent: process.env.SCRAPE_USER_AGENT || "ScriptScout/1.0 (hackathon AI20k; nhom 3A)",
 });
+
+function publicIp(ip) {
+  if (ip.includes(":")) return !(/^(::1|::|fc|fd|fe8|fe9|fea|feb|2001:db8)/i.test(ip) || ip.startsWith("::ffff:"));
+  const p = ip.split(".").map(Number);
+  return !(p[0] === 0 || p[0] === 10 || p[0] === 127 || p[0] >= 224 ||
+    (p[0] === 169 && p[1] === 254) || (p[0] === 172 && p[1] >= 16 && p[1] <= 31) ||
+    (p[0] === 192 && p[1] === 168) || (p[0] === 100 && p[1] >= 64 && p[1] <= 127));
+}
+
+export async function validatePublicUrl(input) {
+  if (typeof input !== 'string' || input.length > 2048) throw new Error('URL quá dài hoặc không hợp lệ');
+  const u = new URL(input);
+  if (!["http:", "https:"].includes(u.protocol) || u.username || u.password || !["", "80", "443"].includes(u.port)) throw new Error("URL phải là trang HTTP(S) công khai");
+  const host = u.hostname.replace(/\.$/, "");
+  if (host === "localhost" || host.endsWith(".localhost") || host.endsWith(".local")) throw new Error("Địa chỉ nội bộ không được phép");
+  const ips = isIP(host) ? [{ address: host }] : await lookup(host, { all: true });
+  if (!ips.length || ips.some(x => !publicIp(x.address))) throw new Error("Địa chỉ nội bộ không được phép");
+  return u.toString();
+}
 
 /** Bóc text từ HTML. Đủ dùng, không cần thư viện. */
 export function htmlSangText(html) {
@@ -82,10 +103,14 @@ export async function scrape(url, opts = {}) {
       const hetGio = setTimeout(() => ctrl.abort(), opts.timeoutMs ?? ch.timeout_ms);
       let res;
       try {
-        res = await fetch(url, {
-          signal: ctrl.signal,
-          headers: { "user-agent": ch.user_agent },
-        });
+        let next = url;
+        for (let hop = 0; hop < 4; hop++) {
+          await validatePublicUrl(next);
+          res = await fetch(next, { signal: ctrl.signal, redirect: "manual", headers: { "user-agent": ch.user_agent } });
+          if (![301, 302, 303, 307, 308].includes(res.status)) break;
+          next = new URL(res.headers.get("location") || "", next).toString();
+        }
+        if ([301, 302, 303, 307, 308].includes(res.status)) throw new Error("quá nhiều chuyển hướng");
       } finally { clearTimeout(hetGio); }
 
       status = res.status;
@@ -96,7 +121,19 @@ export async function scrape(url, opts = {}) {
                       : `HTTP ${status}`;
         return ket_qua;   // KHÔNG coi như đã đọc
       }
-      html = await res.text();
+      if (!String(res.headers.get("content-type") || "").match(/html|text\/plain/i)) throw new Error("trang không có nội dung văn bản");
+      const length = Number(res.headers.get("content-length") || 0);
+      if (length > 500_000) throw new Error("trang quá lớn");
+      const reader = res.body.getReader();
+      const chunks = []; let bytes = 0;
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        bytes += value.length;
+        if (bytes > 500_000) { await reader.cancel(); throw new Error("trang quá lớn"); }
+        chunks.push(value);
+      }
+      html = Buffer.concat(chunks).toString("utf8");
     }
 
     ket_qua.status = status;
