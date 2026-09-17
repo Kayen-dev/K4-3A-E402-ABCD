@@ -132,59 +132,29 @@ function download(name: string, content: string, mime: string) {
 }
 
 function exportMarkdown(project: Project) {
-  const approved = project.approvedRevision === project.revision;
-  const pending =
-    project.sentences.filter((s) => s.needsRewrite || s.needsVerification)
-      .length +
-    project.findings.filter((f) => f.severity === "cao" && !f.decision).length;
   return [
     `# ${project.brief.topic || "Kịch bản"}`,
     "",
-    approved
-      ? "Bản đã duyệt"
-      : `Bản nháp — còn ${pending} chỗ cần kiểm tra`,
-    "",
-    ...project.sentences.flatMap((sentence) => [
-      `## Cảnh ${sentence.scene} · ${sentence.seconds || 0} giây (ước tính)`,
+    ...project.sentences.flatMap(sentence => [
+      `## Cảnh ${sentence.scene}`,
       "",
       `Lời đọc: ${sentence.text}`,
       "",
-      `Gợi ý hình: ${sentence.visual || "Chưa có"}`,
-      ...(sentence.media ? [`Media tham khảo (${sentence.media.kind === 'image' ? 'ảnh' : 'video'}): ${sentence.media.url}`] : []),
-      "",
-      `Nguồn: ${
-        sentence.evidenceIds
-          .map((id) =>
-            project.sources
-              .flatMap((source) =>
-                (source.evidence || [])
-                  .filter((evidence) => evidence.id === id)
-                  .map(
-                    (evidence) =>
-                      `${source.meta?.tieu_de || source.url} (${source.url}) — "${evidence.quote}"`,
-                  ),
-              )
-              .join("; "),
-          )
-          .filter(Boolean)
-          .join("; ") || "Chưa kiểm chứng"
-      }`,
-      "",
     ]),
-    "## Hồ sơ nguồn",
+    "## Ngữ cảnh",
     "",
-    ...project.sources
-      .filter((source) => source.approved)
-      .flatMap((source) => [
-        `- ${source.meta?.tieu_de || source.url} — ${source.url}`,
-        `  - Tác giả/tổ chức: ${source.meta?.tac_gia || source.meta?.to_chuc || "Không xác định"}`,
-        `  - Đoạn làm căn cứ: ${source.trich_dan.join(" | ") || "Chưa có"}`,
+    ...(project.scriptContext ? [project.scriptContext] : [
+      `Chủ đề: ${project.brief.topic}`,
+      `Mục tiêu học xong: ${project.brief.goal}`,
+      `Người học: ${project.brief.audience}`,
+      "",
+      ...project.sources.filter(source => source.approved).flatMap(source => [
+        `### ${source.meta?.tieu_de || source.url}`,
+        `Link tham khảo: ${source.url}`,
+        ...(source.trich_dan || []).map(quote => `Đoạn căn cứ: ${quote}`),
+        "",
       ]),
-    "",
-    "## Trạng thái kiểm tra",
-    "",
-    `Rà soát: ${project.reviewStatus}`,
-    `Phiên bản: ${project.revision}`,
+    ]),
   ].join("\n");
 }
 
@@ -437,6 +407,7 @@ function LessonForm({
   setScript: (script: string) => void;
   onSubmit: () => void;
 }) {
+  const [importError, setImportError] = useState("");
   return (
     <section
       id="start"
@@ -544,6 +515,33 @@ function LessonForm({
           <span className="mb-2 block text-sm font-bold text-slate-800">
             Lời đọc / kịch bản
           </span>
+          <span className="mb-3 flex flex-wrap items-center gap-3">
+            <span className={`${secondary} cursor-pointer`}>
+              Nhập file .md
+              <input
+                className="sr-only"
+                type="file"
+                accept=".md,.markdown,text/markdown"
+                disabled={busy}
+                onChange={async event => {
+                  const file = event.target.files?.[0];
+                  event.target.value = "";
+                  if (!file) return;
+                  setImportError("");
+                  try {
+                    if (!/\.(md|markdown)$/i.test(file.name) || file.size > 120000) throw new Error("Chọn file Markdown tối đa 120 KB.");
+                    const text = await file.text();
+                    if (!text.trim() || text.length > 30000) throw new Error("Kịch bản phải có nội dung và tối đa 30.000 ký tự.");
+                    setScript(text);
+                  } catch (error) {
+                    setImportError(error instanceof Error ? error.message : "Không đọc được file.");
+                  }
+                }}
+              />
+            </span>
+            <span className="text-xs text-slate-500">Nhập file hoặc dán lời đọc. Feedback đã duyệt được dùng khi rà soát.</span>
+          </span>
+          {importError && <span role="alert" className="mb-2 block text-sm text-red-600">{importError}</span>}
           <textarea
             className={`${input} min-h-72`}
             value={script}

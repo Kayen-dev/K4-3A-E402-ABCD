@@ -192,7 +192,7 @@ export async function kiemChungClaims(factsById) {
    SOÁT VĂN NÓI  (code + AI 4)
    ═══════════════════════════════════════════════════════════════════ */
 
-export async function soatVanNoi(cauList, factsById, dangDung, { boQuaAI = false, approvedFeedback = [], onLog } = {}) {
+export async function soatVanNoi(cauList, factsById, dangDung, { boQuaAI = false, approvedFeedback = [], scriptContext = '', onLog } = {}) {
   const findings = [];
 
   // ── phần CODE: câu dài · xưng hô · claim thiếu căn cứ
@@ -222,7 +222,7 @@ export async function soatVanNoi(cauList, factsById, dangDung, { boQuaAI = false
   let aiFailed = false;
   if (!boQuaAI) {
     try {
-      const prompt = p4_soatVanNoi({ cauList, approvedFeedback });
+      const prompt = p4_soatVanNoi({ cauList, approvedFeedback, scriptContext });
       const ai = await askJson({ ...prompt, stubKey: "default", onLog });
       for (const f of ai.findings || []) {
         if (!f || !["sai-nghia", "translationese", "sai-sac-thai", "register", "gop-y-da-duyet"].includes(f.loai) ||
@@ -271,7 +271,7 @@ export async function vietCau({ chu_de, muc_tieu, nguoi_hoc, so_cau, nguonList, 
       do_tin_cay: n.do_tin_cay,
       canh_bao: n.canh_bao,
       doan_trich: n.trich_dan,
-      noi_dung_bai_viet: n.snapshot?.slice(0, 6000),
+      noi_dung_bai_viet: n.snapshot || '',
       media: n.media || [],
     }));
 

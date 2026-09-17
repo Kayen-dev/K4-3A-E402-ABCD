@@ -4,6 +4,7 @@ import { searchUrls, assessUrls } from './research.js';
 import { canUseSource } from './source-policy.js';
 import { approvedFeedbackForReview } from './feedback.js';
 import { validatePublicUrl } from './scrape.js';
+import { parseScriptMarkdown } from './script-markdown.js';
 import { vietCau, gomFact, soatVanNoi, kiemChungClaims } from './pipeline.js';
 
 const locks = new Map();
@@ -47,15 +48,18 @@ export async function createProject(body) {
   if (!['research', 'qa'].includes(mode)) throw fault(400, 'INVALID_MODE', 'Chọn một cách bắt đầu');
   const topic = String(body.brief?.topic || '').trim();
   const script = String(body.script || '').trim();
+  const imported = parseScriptMarkdown(script);
   if (mode === 'research' && (!topic || topic.length > 300)) throw fault(400, 'INVALID_TOPIC', 'Nhập chủ đề bài học (tối đa 300 ký tự)');
   if (mode === 'research' && !String(body.brief?.goal || '').trim()) throw fault(400, 'INVALID_GOAL', 'Nhập mục tiêu bài học');
   if (mode === 'research' && !String(body.brief?.audience || '').trim()) throw fault(400, 'INVALID_AUDIENCE', 'Nhập người học');
   if (mode === 'qa' && (!script || script.length > 30000)) throw fault(400, 'INVALID_SCRIPT', 'Dán kịch bản (tối đa 30.000 ký tự)');
+  if (mode === 'qa' && !imported.script.trim()) throw fault(400, 'INVALID_SCRIPT', 'File phải có lời đọc để rà soát');
   if (String(body.brief?.goal || '').length > 2000 || String(body.brief?.audience || '').length > 300) throw fault(400, 'INVALID_BRIEF', 'Mục tiêu hoặc người học quá dài');
   const now = stamp();
   const p = { id: randomUUID(), mode, revision: 1, createdAt: now, updatedAt: now,
     brief: { topic, goal: String(body.brief?.goal || ''), audience: String(body.brief?.audience || ''), duration: Number(body.brief?.duration || 5) },
-    sources: [], claims: {}, sentences: mode === 'qa' ? splitScript(script) : [], findings: [],
+    scriptContext: mode === 'qa' ? imported.context : '',
+    sources: [], claims: {}, sentences: mode === 'qa' ? splitScript(imported.script) : [], findings: [],
     sourceApprovalRevision: null, approvedRevision: null, reviewStatus: 'not-run', run: null, audit: [], requestIds: [] };
   if (!Number.isFinite(p.brief.duration) || p.brief.duration < 1 || p.brief.duration > 120) throw fault(400, 'INVALID_DURATION', 'Thời lượng phải từ 1 đến 120 phút');
   await save(p); return p;
@@ -209,7 +213,7 @@ async function longAction(id, body, emit) {
       const cau = start.sentences.map((s, i) => ({ n: i + 1, loi: s.text, fact_ids: s.claimIds }));
       const approved = new Set(eligible(start).map(s => s.nguon_id));
       const reviewedFeedback = await approvedFeedbackForReview();
-      result = await soatVanNoi(cau, start.claims, approved, { boQuaAI: !process.env.LLM_API_KEY || (process.env.LLM_PROVIDER || 'stub') === 'stub', approvedFeedback: reviewedFeedback });
+      result = await soatVanNoi(cau, start.claims, approved, { boQuaAI: !process.env.LLM_API_KEY || (process.env.LLM_PROVIDER || 'stub') === 'stub', approvedFeedback: reviewedFeedback, scriptContext: start.scriptContext || '' });
       result.feedbackIds = reviewedFeedback.map(item => item.id);
     }
     return await locked(id, async () => {
