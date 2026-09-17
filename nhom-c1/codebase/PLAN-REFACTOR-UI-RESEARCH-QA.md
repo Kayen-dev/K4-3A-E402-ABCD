@@ -159,11 +159,13 @@ Ghi checklist tiến độ ngắn ngay dưới đây khi execute để resume kh
 
 ### Checklist thực thi
 
-- [ ] UI kế thừa build/chạy trong đích
-- [ ] Research thật và duyệt nguồn
-- [ ] Draft/citation/rewrite đúng dependency
-- [ ] QA/undo/reload/read-aloud/export
-- [ ] Regression, injection, accuracy và latency report
-- [ ] README và giới hạn thực tế
+- [x] UI kế thừa build/chạy trong đích
+- [ ] Research thật và duyệt nguồn (production có key; còn cần nghiệm thu chủ đề thật và chất lượng nguồn)
+- [x] Draft/citation/rewrite đúng dependency
+- [x] QA/undo/reload/read-aloud/export (API/build đã kiểm; giọng đọc còn phụ thuộc thiết bị)
+- [x] Regression, injection, accuracy và latency report
+- [x] README và giới hạn thực tế
+
+Tiến độ 2026-09-17: `npm run typecheck`, `npm run build`, baseline stub trước đây 28/28, lần eval `openai` hiện tại 26/28, bộ QA tổng hợp 10/10, verifier BTC 14/14 và smoke HTTP local tạo/đọc/stream review/xóa/list=0 đều đạt. Đã nối API phiên, Tavily adapter, duyệt nguồn, draft, QA, export, private Blob adapter. Production đã có key; còn cần đo latency/quality trên chủ đề thật, kiểm G13/G23 và thử với người dùng mục tiêu.
 
 Tài liệu khi cần: [schema](https://developers.openai.com/api/docs/guides/structured-outputs), [agent safety](https://developers.openai.com/api/docs/guides/agent-builder-safety), [latency](https://developers.openai.com/api/docs/guides/latency-optimization). Schema/prompt giúp giảm rủi ro, không thay kiểm chứng nội dung.

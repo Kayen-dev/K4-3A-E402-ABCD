@@ -5,7 +5,17 @@
   "type": "module",
   "description": "C3 ScriptScout + C2 QA — nhóm 3A, hackathon AI20k K4",
   "scripts": {
-    "eval": "node ../eval/run.js"
+    "dev": "node server.js",
+    "ui:dev": "npm --prefix ui run dev",
+    "build": "npm --prefix ui run build",
+    "typecheck": "npm --prefix ui run typecheck",
+    "eval": "node ../eval/run.js",
+    "eval:refactor": "node eval-refactor.js"
   },
-  "engines": { "node": ">=18" }
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@vercel/blob": "^2.8.0"
+  }
 }

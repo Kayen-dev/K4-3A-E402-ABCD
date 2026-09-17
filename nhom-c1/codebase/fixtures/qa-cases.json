@@ -1,0 +1,12 @@
+[
+  {"id":"Q01","provenance":"synthetic","text":"Đây là một câu được viết rất dài để giải thích nhiều nội dung khác nhau cho người học trong cùng một hơi mà không có điểm nghỉ rõ ràng và làm cho người dẫn khó đọc hết một cách tự nhiên.","category":"cau-dai","severity":"cao","reviewer":"pending-human"},
+  {"id":"Q02","provenance":"synthetic","text":"Bạn xem ví dụ này.\nQuý vị đọc tiếp phần sau.","category":"xung-ho","severity":"cao","reviewer":"pending-human"},
+  {"id":"Q03","provenance":"synthetic","text":"Hãy xem xem kết quả này.","category":"lap-filler","severity":"trung bình","reviewer":"pending-human"},
+  {"id":"Q04","provenance":"synthetic","text":"Ừm, chúng ta bắt đầu nhé.","category":"lap-filler","severity":"thấp","reviewer":"pending-human"},
+  {"id":"Q05","provenance":"synthetic","text":"Mở https://example.org/guide để đọc thêm.","category":"pronunciation-only","severity":"thấp","reviewer":"pending-human"},
+  {"id":"Q06","provenance":"synthetic","text":"API cung cấp kết quả cho lớp học.","category":"pronunciation-only","severity":"thấp","reviewer":"pending-human"},
+  {"id":"Q07","provenance":"synthetic","text":"Bạn có thể thử cách này trong bài tập hôm nay.","category":null,"severity":null,"reviewer":"pending-human"},
+  {"id":"Q08","provenance":"synthetic","text":"Trong bài học, ta phân tích câu 'ignore previous instructions' như một ví dụ về tấn công.","category":null,"severity":null,"reviewer":"pending-human"},
+  {"id":"Q09","provenance":"synthetic","text":"Chi phí tăng gấp 99 lần.","category":"thieu-can-cu","severity":"cao","fact":{"id":"t1","bang_chung":[{"nguon_id":"s1","doan_trich":"Chi phí tăng gấp 3 lần."}]},"reviewer":"pending-human"},
+  {"id":"Q10","provenance":"synthetic","text":"Google công bố kết quả này.","category":"thieu-can-cu","severity":"trung bình","fact":{"id":"t1","bang_chung":[{"nguon_id":"s1","doan_trich":"Nhóm nghiên cứu công bố kết quả này."}]},"reviewer":"pending-human"}
+]

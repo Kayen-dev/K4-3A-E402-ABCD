@@ -18,11 +18,12 @@
 // KHÔNG bị model ghi đè.
 
 import { scrape } from "./scrape.js";
+import { createHash } from "node:crypto";
 import { askJson } from "./llm.js";
-import { p1_truyVan, p2_chamNguon, p3_vietCau, p4_soatVanNoi } from "./prompts.js";
+import { p1_truyVan, p2_chamNguon, p3_vietCau, p4_soatVanNoi, p5_kiemChung } from "./prompts.js";
 import {
   quaHan, doLenhAn, demNguonDocLap, doMauThuan,
-  cauQuaDai, doXungHo, claimThieuCanCu, soLieuTuFactChuaXacMinh, locFindingHopLe, phamViLamLai,
+  cauQuaDai, doXungHo, doLapFiller, doKhoDoc, claimThieuCanCu, soLieuTuFactChuaXacMinh, locFindingHopLe, phamViLamLai,
 } from "./rules.js";
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -56,6 +57,8 @@ export async function quyetDinhNguon(url, { chu_de, fixtures, nguon_id, onLog } 
     // Không coi như đã đọc. Đây là một kết quả có thật, không phải lỗi để nuốt.
     return kq;
   }
+  kq.snapshot = trang.text;
+  kq.snapshot_hash = createHash("sha256").update(trang.text).digest("hex");
 
   // ── Bước B · LỚP PHÒNG THỦ 1 — dò chỉ thị ẩn, TRƯỚC khi model thấy gì
   const lenhAn = trang.lenh_an?.length ? trang.lenh_an : doLenhAn(trang.text);
@@ -96,14 +99,14 @@ export async function quyetDinhNguon(url, { chu_de, fixtures, nguon_id, onLog } 
     // API hỏng (hết hạn mức, mất mạng, sai khoá). Gộp vào "loai" thì báo cáo nói sai
     // sự thật — người đọc sẽ tưởng nguồn kém chất lượng.
     kq.trang_thai = "loi-goi-ai";
-    kq.ly_do = `Không chấm được vì lỗi gọi API: ${e.message}`;
+    kq.ly_do = "Không đánh giá được nguồn. Thử lại hoặc liên hệ người quản trị.";
     kq.loi_vinh_vien = !!e.vinhVien;   // sai khoá / sai model / request sai → gọi nữa cũng thế
     return kq;
   }
 
   kq.diem_tieu_chi[2] = ai.diem?.[2] ?? 0;
   kq.diem_tieu_chi[3] = ai.diem?.[3] ?? 0;
-  kq.trich_dan = Array.isArray(ai.trich_dan) ? ai.trich_dan : [];
+  kq.trich_dan = Array.isArray(ai.trich_dan) ? ai.trich_dan.filter(q => typeof q === "string" && q.length > 0 && q.length <= 1000 && trang.text.includes(q)) : [];
   kq.rationale = ai.rationale ?? null;
 
   // ── Bước E · CODE GHI ĐÈ. Model không được phép lật ba tiêu chí của code.
@@ -119,16 +122,17 @@ export async function quyetDinhNguon(url, { chu_de, fixtures, nguon_id, onLog } 
   }
 
   // ── Bước F · chốt trạng thái theo luật công bố trước
-  const [t1, t2, , , t5] = kq.diem_tieu_chi;
-  if (t1 === 0 || t5 === 0) {
+  const [t1, t2, t3, t4, t5] = kq.diem_tieu_chi;
+  if (t1 !== 1 || t4 !== 1 || t5 !== 1) {
     kq.trang_thai = "loai";
-    kq.ly_do = t1 === 0
+    kq.ly_do = t1 !== 1
       ? "Không truy được người chịu trách nhiệm (trượt tiêu chí 1)."
-      : "Trang chứa chỉ thị ẩn (trượt tiêu chí 5).";
+      : t5 !== 1 ? "Trang chứa chỉ thị ẩn (trượt tiêu chí 5)."
+      : "Nội dung chưa phù hợp với bài học.";
     kq.do_tin_cay = "thap";
-  } else if (t2 === 0) {
+  } else if (t2 === 0 || t3 !== 1) {
     kq.trang_thai = "dung-canh-bao";
-    kq.ly_do = han.vi;
+    kq.ly_do = t3 !== 1 ? `${han.vi}; nguồn không dẫn tài liệu riêng, cần kiểm tra kỹ trước khi dùng.` : han.vi;
     kq.do_tin_cay = "trung binh";
   } else {
     kq.trang_thai = "dung";
@@ -160,6 +164,24 @@ export function gomFact(facts, nguonList) {
   return { facts: out, dangDung };
 }
 
+export async function kiemChungClaims(factsById) {
+  const facts = Object.values(factsById);
+  const candidates = facts.filter(f => f.trang_thai === 'da-xac-minh');
+  const out = Object.fromEntries(facts.map(f => [f.id, { ...f, supportStatus: f.mau_thuan ? 'conflicting' : 'insufficient', supportReason: f.trang_thai }]));
+  if (!candidates.length) return out;
+  try {
+    const prompt = p5_kiemChung({ claims: candidates.map(f => ({ id: f.id, statement: f.noi_dung, evidence: f.bang_chung.map(b => ({ sourceId: b.nguon_id, quote: b.doan_trich })) })) });
+    const ai = await askJson(prompt);
+    if (!Array.isArray(ai.verdicts)) return out;
+    for (const verdict of ai.verdicts) {
+      if (!out[verdict.id] || !['supported', 'conflicting', 'insufficient'].includes(verdict.status) || typeof verdict.reason !== 'string') continue;
+      out[verdict.id].supportStatus = verdict.status;
+      out[verdict.id].supportReason = verdict.reason.slice(0, 500);
+    }
+  } catch { /* Keep insufficient; never upgrade after verifier failure. */ }
+  return out;
+}
+
 /* ═══════════════════════════════════════════════════════════════════
    SOÁT VĂN NÓI  (code + AI 4)
    ═══════════════════════════════════════════════════════════════════ */
@@ -171,8 +193,17 @@ export async function soatVanNoi(cauList, factsById, dangDung, { boQuaAI = false
   for (const c of cauList) {
     const dai = cauQuaDai(c.loi);
     if (dai) findings.push({ ...dai, cau: c.n, nguon_bat: "code" });
+    for (const f of [...doLapFiller(c.loi), ...doKhoDoc(c.loi)]) findings.push({ ...f, cau: c.n, nguon_bat: "code" });
     for (const f of claimThieuCanCu(c, factsById, dangDung)) {
       findings.push({ ...f, nguon_bat: "code" });
+    }
+    for (const id of c.fact_ids || []) {
+      const fact = factsById[id];
+      if (fact && fact.supportStatus && fact.supportStatus !== 'supported') findings.push({
+        loai: 'thieu-can-cu', sev: 'cao', cau: c.n, quote: null,
+        vi: `Thông tin trong câu chưa được đoạn tài liệu xác nhận đầy đủ (${fact.supportReason || fact.supportStatus}).`,
+        goiY: 'Tìm nguồn bổ sung hoặc viết lại câu theo phần đã có căn cứ.', thay: null, nguon_bat: 'code',
+      });
     }
     for (const f of soLieuTuFactChuaXacMinh(c, factsById)) {
       findings.push({ ...f, nguon_bat: "code" });
@@ -182,24 +213,37 @@ export async function soatVanNoi(cauList, factsById, dangDung, { boQuaAI = false
 
   // ── phần AI: translationese · sai sắc thái
   let boFinding = [];
+  let aiFailed = false;
   if (!boQuaAI) {
     try {
       const prompt = p4_soatVanNoi({ cauList });
       const ai = await askJson({ ...prompt, stubKey: "default", onLog });
       for (const f of ai.findings || []) {
-        const cau = cauList.find(c => c.n === f.n);
+        if (!f || !["sai-nghia", "translationese", "sai-sac-thai", "register"].includes(f.loai) ||
+            !["cao", "trung bình", "thấp"].includes(f.sev) || typeof f.quote !== "string" ||
+            f.quote.length < 2 || f.quote.length > 400 || typeof f.vi !== "string" || f.vi.length > 1000 ||
+            (f.thay !== null && (typeof f.thay !== "string" || f.thay.length > 400))) {
+          boFinding.push({ vi_sao_bo: "đầu ra không đúng schema" }); continue;
+        }
+        let soCau = Number.isInteger(f.n) ? f.n : (Number.isInteger(f.cau) ? f.cau : null);
+        if (soCau == null) {
+          const khop = cauList.filter(c => String(c.loi).includes(f.quote));
+          if (khop.length === 1) soCau = khop[0].n;
+        }
+        const cau = cauList.find(c => c.n === soCau);
         if (!cau) { boFinding.push({ ...f, vi_sao_bo: "số câu không tồn tại" }); continue; }
         // indexOf: không tìm thấy chuỗi nguyên văn → VỨT. Ưu tiên precision.
-        const { giu, bo } = locFindingHopLe(cau, [{ ...f, cau: f.n }]);
+        const { giu, bo } = locFindingHopLe(cau, [{ ...f, n: soCau, cau: soCau }]);
         giu.forEach(x => findings.push({ ...x, nguon_bat: "ai" }));
         bo.forEach(x => boFinding.push({ ...x, vi_sao_bo: "quote không khớp nguyên văn câu" }));
       }
     } catch (e) {
+      aiFailed = true;
       boFinding.push({ vi_sao_bo: `AI 4 lỗi: ${e.message}` });
     }
   }
 
-  return { findings, boFinding };
+  return { findings, boFinding, aiFailed };
 }
 
 /* ═══════════════════════════════════════════════════════════════════
