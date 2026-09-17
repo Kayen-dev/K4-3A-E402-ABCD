@@ -35,6 +35,7 @@ import {
   type Project,
   type User,
   type Source,
+  type ResearchMedia,
   type Summary,
 } from "./api";
 
@@ -629,11 +630,23 @@ function ProjectsList({
   );
 }
 
+function SourceMediaPreview({ media, index }: { media: ResearchMedia; index: number }) {
+  const [failed, setFailed] = useState(false);
+  return <figure className="min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+    {media.kind === 'image' && !failed ? <a href={media.url} target="_blank" rel="noopener noreferrer" aria-label={`Mở ảnh gốc ${index + 1}`} className="block focus-visible:outline-2 focus-visible:outline-indigo-600">
+      <img src={media.url} alt={`Ảnh ${index + 1} từ tài liệu`} loading="lazy" referrerPolicy="no-referrer" onError={() => setFailed(true)} className="h-48 w-full object-contain p-2" />
+    </a> : <div className="flex h-48 items-center justify-center p-4 text-center text-sm text-slate-500">{failed ? 'Không tải được ảnh xem trước. Bạn có thể mở ảnh gốc bên dưới.' : 'Video tham khảo · mở link để xem'}</div>}
+    <figcaption className="border-t border-slate-200 bg-white p-3">
+      <a className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-indigo-700 underline" href={media.url} target="_blank" rel="noopener noreferrer">{media.kind === 'image' ? 'Mở ảnh gốc' : 'Mở video'} {index + 1}<ExternalLink className="size-4" /></a>
+    </figcaption>
+  </figure>;
+}
+
 function ResearchPanel({
   project,
   selected,
   setSelected,
-  busy,
+  busy: requestBusy,
   message,
   progressLog,
   researchOpen,
@@ -661,6 +674,9 @@ function ResearchPanel({
   ) => Promise<Project | null>;
   viewSource: (id: string) => void;
 }) {
+  const [writingPhase, setWritingPhase] = useState<'saving' | 'generating' | null>(null);
+  const writingLock = useRef(false);
+  const busy = requestBusy || writingPhase !== null;
   const usable = project.sources.filter(canUseSource).length;
   const readCount = project.sources.filter((source) => !!source.snapshot?.trim() && source.trang_thai !== 'khong-doc-duoc').length;
   const checkedUsable = selected.filter((id) =>
@@ -677,12 +693,23 @@ function ResearchPanel({
   };
 
   async function writeScript() {
-    const approvedProject = await run("approve-sources", { sourceIds: selected }, "save");
-    if (approvedProject) await run("generate", {}, "generate", approvedProject);
+    if (busy || writingLock.current || checkedUsable === 0) return;
+    writingLock.current = true;
+    setWritingPhase('saving');
+    try {
+      const approvedProject = await run("approve-sources", { sourceIds: selected }, "save");
+      if (approvedProject) {
+        setWritingPhase('generating');
+        await run("generate", {}, "generate", approvedProject);
+      }
+    } finally {
+      writingLock.current = false;
+      setWritingPhase(null);
+    }
   }
 
   return (
-    <section className="space-y-4">
+    <section className="min-w-0 space-y-4">
       <div className="rounded-[2rem] border border-indigo-100 bg-white shadow-sm">
         <button
           type="button"
@@ -749,7 +776,16 @@ function ResearchPanel({
                   ))}
               </ol>
             </div>
-            <div className="mt-4 grid gap-3 lg:grid-cols-[1fr_auto_auto]">
+            <div className="mt-4 rounded-2xl border border-indigo-100 bg-indigo-50/50 p-4 text-sm text-slate-700">
+              <p className="font-bold text-slate-950">Phạm vi tìm tài liệu</p>
+              <p className="mt-2 break-words"><strong>Chủ đề bài học · trọng tâm:</strong> {project.brief.topic}</p>
+              <p className="mt-1 whitespace-pre-wrap break-words"><strong>Mục tiêu học xong · ngữ cảnh bổ sung:</strong> {project.brief.goal}</p>
+              {!!project.researchQueries?.length && <details className="mt-3">
+                <summary className="cursor-pointer font-semibold text-indigo-700">Xem {project.researchQueries.length} truy vấn đã tìm</summary>
+                <ul className="mt-2 list-disc space-y-1 pl-5">{project.researchQueries.map(query => <li key={query} className="break-words">{query}</li>)}</ul>
+              </details>}
+            </div>
+            <div className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto_auto]">
               <label>
                 <span className="mb-2 block text-sm font-bold text-slate-800">
                   Thêm URL tài liệu
@@ -782,8 +818,8 @@ function ResearchPanel({
         )}
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[1fr_18rem]">
-        <div className="space-y-3">
+      <div className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1fr)_18rem]">
+        <div className="min-w-0 space-y-3">
           {project.sources.length ? (
             [...project.sources].sort((a, b) =>
               Number(!!b.snapshot?.trim() && b.trang_thai !== 'khong-doc-duoc') - Number(!!a.snapshot?.trim() && a.trang_thai !== 'khong-doc-duoc')
@@ -794,7 +830,7 @@ function ResearchPanel({
               return (
                 <article
                   key={source.nguon_id}
-                  className={`rounded-[1.5rem] border bg-white p-4 shadow-sm transition ${
+                  className={`min-w-0 rounded-[1.5rem] border bg-white p-4 shadow-sm transition ${
                     isSelected
                       ? "border-indigo-300 ring-4 ring-indigo-50"
                       : "border-slate-200"
@@ -817,7 +853,7 @@ function ResearchPanel({
                         <span className="mb-1 block text-xs font-bold uppercase tracking-[0.16em] text-slate-400">
                           Tài liệu {index + 1}
                         </span>
-                        <strong className="block text-slate-950">
+                        <strong className="block break-words text-slate-950">
                           {source.meta?.tieu_de || source.url}
                         </strong>
                         <span className="mt-1 block break-all text-sm text-slate-500">
@@ -831,10 +867,10 @@ function ResearchPanel({
                       {statusLabel(source)}
                     </span>
                   </div>
-                  <p className="mt-3 text-sm leading-6 text-slate-600">
+                  <p className="mt-3 break-words text-sm leading-6 text-slate-600">
                     {source.ly_do || "Chưa có ghi chú đánh giá nguồn."}
                   </p>
-                  {source.snapshot && source.trang_thai !== 'khong-doc-duoc' && <p className="mt-2 line-clamp-3 text-sm leading-6 text-slate-600">{source.snapshot.slice(0, 350)}</p>}
+                  {source.snapshot && source.trang_thai !== 'khong-doc-duoc' && <p className="mt-2 line-clamp-3 break-words text-sm leading-6 text-slate-600">{source.snapshot.slice(0, 350)}</p>}
                   <div className="mt-3 flex flex-wrap items-center gap-2">
                     <button
                       className={secondary}
@@ -875,13 +911,20 @@ function ResearchPanel({
             Kịch bản dựa vào nội dung các nguồn đã chọn và mục tiêu học xong.
             Nguồn có nội dung được xếp trước; mỗi thông tin cần đoạn làm căn cứ để kiểm chứng.
           </p>
-          <button
+          {writingPhase ? <div role="status" aria-live="polite" className="mt-5 rounded-2xl border border-indigo-100 bg-indigo-50 p-4">
+            <div className="flex items-center gap-2 text-sm font-semibold text-indigo-800">
+              <Loader2 className="size-5 shrink-0 animate-spin motion-reduce:animate-none" aria-hidden="true" />
+              {writingPhase === 'saving' ? 'Đang lưu nguồn đã chọn…' : 'Đang viết kịch bản…'}
+            </div>
+            <p className="mt-2 text-xs leading-5 text-slate-600">{writingPhase === 'generating' && message ? message : 'Đang chuẩn bị nội dung từ các tài liệu bạn đã chọn.'}</p>
+            <p className="mt-2 text-xs leading-5 text-slate-600">Kịch bản sẽ tự mở khi hoàn tất.</p>
+          </div> : <button
             className={`${primary} mt-5 w-full`}
             disabled={busy || checkedUsable === 0}
             onClick={writeScript}
           >
             <Sparkles className="size-4" /> Viết kịch bản
-          </button>
+          </button>}
           {checkedUsable === 0 && (
             <p className="mt-3 text-xs text-amber-700">
               Chọn ít nhất một tài liệu có thể dùng.
@@ -1285,7 +1328,7 @@ function TeacherApp({ user, onLogout }: { user: User; onLogout: () => void }) {
         {!project && (
           <>
             <LandingPage mode={mode} setMode={setMode} />
-            <div className="grid gap-6 lg:grid-cols-[1fr_24rem]">
+            <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_24rem]">
               <LessonForm
                 mode={mode}
                 brief={brief}
@@ -1464,7 +1507,9 @@ function TeacherApp({ user, onLogout }: { user: User; onLogout: () => void }) {
             ) : <p className="mt-2 text-sm text-slate-500">Chưa có đoạn trích hợp lệ.</p>}
             {!!source.media?.length && <div className="mt-5 space-y-2">
               <h3 className="font-bold text-slate-950">Ảnh/video từ tài liệu</h3>
-              {source.media.map(item => <a key={item.url} className="block break-all text-sm text-indigo-700 underline" href={item.url} target="_blank" rel="noopener noreferrer">{item.kind === 'image' ? 'Ảnh' : 'Video'} · {item.url}</a>)}
+              <div className="grid min-w-0 gap-3 sm:grid-cols-2">
+                {source.media.map((item, index) => <SourceMediaPreview key={item.url} media={item} index={index} />)}
+              </div>
             </div>}
             <details className="mt-5 rounded-2xl border border-slate-200 p-4">
               <summary className="cursor-pointer font-semibold text-slate-800">Xem toàn bộ nội dung đã đọc và mã đối chiếu</summary>

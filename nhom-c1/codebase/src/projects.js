@@ -179,13 +179,17 @@ async function longAction(id, body, emit) {
   const progress = e => emit({ runId, sequence: ++sequence, ...e });
   try {
     let result;
+    const researchQueries = [];
     if (body.action === 'research') {
       const topic = start.mode === 'qa'
         ? start.sentences.find(s => s.id === body.sentenceId)?.text.slice(0, 300)
         : start.brief.topic;
       if (!topic) throw fault(400, 'INVALID_SENTENCE', 'Chọn câu cần kiểm chứng');
       const goal = start.mode === 'research' ? start.brief.goal : '';
-      const urls = await searchUrls(topic, goal, controller.signal);
+      const urls = await searchUrls(topic, goal, controller.signal, query => {
+        researchQueries.push(query);
+        progress({ type: 'progress', message: `Đang tìm: ${query}` });
+      });
       progress({ type: 'progress', message: `Tìm thấy ${urls.length} tài liệu. Đang đọc...` });
       result = await assessUrls(urls, topic, goal, progress, controller.signal);
     } else if (body.action === 'add-source') {
@@ -212,6 +216,7 @@ async function longAction(id, body, emit) {
       const p = await getProject(id);
       if (controller.signal.aborted || p.revision !== body.revision || p.run?.id !== runId) throw fault(409, 'STALE_RUN', 'Tác vụ đã bị hủy hoặc dữ liệu đã đổi');
       if (body.action === 'research' || body.action === 'add-source') {
+        if (body.action === 'research') p.researchQueries = researchQueries;
         for (const s of result) {
           const existing = p.sources.find(item => item.url === s.url);
           if (existing?.snapshot && existing.trang_thai !== 'khong-doc-duoc') continue;

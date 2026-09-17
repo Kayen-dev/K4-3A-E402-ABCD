@@ -2,24 +2,30 @@ import { quyetDinhNguon } from './pipeline.js';
 import { validatePublicUrl, scrape } from './scrape.js';
 import { createHash } from 'node:crypto';
 
-export async function searchUrls(topic, goal = '', signal) {
+export function buildResearchQueries(topic, goal = '') {
+  const objectiveText = String(goal).trim();
+  if (!objectiveText) return [topic, `${topic} nghiên cứu tài liệu`, `${topic} research evidence`];
+  const objectives = objectiveText.split(/[\n.;]+/).map(x => x.replace(/^\s*[-•\d)]+\s*/, '').trim()).filter(Boolean);
+  return [...new Set([
+    topic,
+    `${topic} ${objectiveText}`,
+    ...objectives.map(objective => `${topic} ${objective}`),
+  ])];
+}
+
+export async function searchUrls(topic, goal = '', signal, onQuery = () => {}) {
   const key = process.env.TAVILY_API_KEY;
   if (!key) { const e = new Error('Chưa cấu hình tìm kiếm. Liên hệ người quản trị hoặc thêm URL tài liệu.'); e.code = 'SEARCH_NOT_CONFIGURED'; throw e; }
-  const objectives = String(goal).split(/[\n.;]+/).map(x => x.trim()).filter(Boolean).slice(0, 3);
-  const queries = [...new Set([
-    topic,
-    ...objectives.map(objective => `${topic} ${objective}`),
-    `${topic} nghiên cứu tài liệu`,
-    `${topic} research evidence`,
-  ])];
+  const queries = buildResearchQueries(topic, goal);
   const MAX_SOURCES = 20;
   const groups = [];
   for (const query of queries) {
+    onQuery(query);
     const group = [];
     const res = await fetch('https://api.tavily.com/search', {
       method: 'POST', signal,
       headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json' },
-      body: JSON.stringify({ query, search_depth: 'basic', max_results: 10, include_answer: false }),
+      body: JSON.stringify({ query, search_depth: 'advanced', max_results: 10, include_answer: false }),
     });
     if (!res.ok) throw new Error(`Tìm kiếm gặp lỗi HTTP ${res.status}`);
     const data = await res.json();

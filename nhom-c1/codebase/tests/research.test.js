@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { bocNoiDung, scrape, danhSachFixture } from '../src/scrape.js';
-import { searchUrls } from '../src/research.js';
+import { searchUrls, buildResearchQueries } from '../src/research.js';
 import { createProject, actionProject } from '../src/projects.js';
 import { writeProject } from '../src/storage.js';
 
@@ -72,9 +72,21 @@ test('search includes objectives and distributes the 20 sources across queries',
     assert.equal(urls.length, 20);
     assert(queries.includes('AI Giải thích học máy'));
     assert(queries.includes('AI Phân biệt AI và lập trình'));
+    assert(!queries.includes('Giải thích học máy'));
+    assert(!queries.includes('Phân biệt AI và lập trình'));
+    assert.equal(queries[0], 'AI');
+    assert(queries.every(query => query.startsWith('AI')));
     assert(urls.includes(`${base}/3/0`));
-    assert(urls.includes(`${base}/5/0`));
+    assert(urls.includes(`${base}/4/0`));
   } finally { restoreEnvironment(); }
+});
+
+test('search retains every learning objective, including those after the third', () => {
+  const queries = buildResearchQueries('Thế giới động vật', 'Nhận biết môi trường sống\nPhân loại động vật\nSo sánh cách sinh sản\nBảo vệ động vật hoang dã');
+  assert(queries.includes('Thế giới động vật Bảo vệ động vật hoang dã'));
+  assert(!queries.includes('Bảo vệ động vật hoang dã'));
+  assert.equal(queries[0], 'Thế giới động vật');
+  assert(queries.every(query => query.startsWith('Thế giới động vật')));
 });
 
 test('generation uses article content, saves new evidence and media per scene, rejects invented evidence', async t => {

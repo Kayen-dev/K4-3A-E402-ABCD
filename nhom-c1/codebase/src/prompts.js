@@ -71,7 +71,7 @@ export function p2_chamNguon({ chu_de, muc_tieu = '', url, meta, text, ket_qua_c
     user: [
       `Chủ đề đang làm: ${chu_de}`,
       `Mục tiêu học xong: ${muc_tieu}`,
-      'Đánh giá độ phù hợp dựa trên cả chủ đề và mục tiêu học xong.',
+      'Chủ đề bài học là trọng tâm bắt buộc. Mục tiêu học xong là ngữ cảnh phụ để chọn nội dung bổ sung cho chủ đề. Không coi tài liệu chỉ khớp mục tiêu nhưng lạc chủ đề là phù hợp.',
       `URL: ${url}`,
       `Siêu dữ liệu bóc được: ${JSON.stringify(meta)}`,
       `Code đã kiểm trước: ${JSON.stringify(ket_qua_code)}`,
@@ -132,6 +132,7 @@ export function p3_vietCau({ chu_de, muc_tieu, nguoi_hoc, so_cau, facts }) {
       `Mục tiêu bài học: ${muc_tieu}`,
       `Người học: ${nguoi_hoc}`,
       `Viết ${so_cau} câu mở đầu.`,
+      'Lấy chủ đề bài học làm trọng tâm kịch bản; mục tiêu học xong chỉ định hướng cách giải thích và nội dung bổ sung cho chủ đề.',
       "",
       "Các nguồn đã duyệt cùng nội dung bài viết, đoạn trích và media. Chỉ nội dung đã cấp được dùng làm căn cứ:",
       JSON.stringify(facts, null, 2),

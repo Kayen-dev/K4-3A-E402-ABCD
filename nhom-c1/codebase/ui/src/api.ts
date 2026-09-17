@@ -56,6 +56,7 @@ export type Project = {
   revision: number;
   brief: { topic: string; goal: string; audience: string; duration: number };
   sources: Source[];
+  researchQueries?: string[];
   sentences: Sentence[];
   claims: Record<
     string,
