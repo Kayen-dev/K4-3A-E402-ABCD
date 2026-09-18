@@ -4,21 +4,21 @@
 
 ## Source code và chạy ScriptScout
 
-- Dự án chính: [codebase/nhom-c1](codebase/nhom-c1/).
-- App React + Node/API: `codebase/nhom-c1/codebase/`.
+- Dự án chính: [codebase/src](codebase/src/).
+- App React + Node/API: `codebase/src/codebase/`.
 - Prototype cũ: `codebase/codebase-demo/`.
 - Hướng dẫn chạy và deploy: [codebase/README.md](codebase/README.md).
 - Reflection Hồ Đình Tuấn Kiệt: [reflection/02785.DinhTuanKiet.md](reflection/02785.DinhTuanKiet.md).
 
 ```powershell
-cd codebase/nhom-c1/codebase
+cd codebase/src/codebase
 npm install
 npm --prefix ui install
 npm run build
 npm run dev
 ```
 
-App local: http://127.0.0.1:5173. Vercel Production dùng nhánh `main` và Root Directory `codebase/nhom-c1/codebase`.
+App local: http://127.0.0.1:5173. Vercel Production dùng nhánh `main` và Root Directory `codebase/src/codebase`.
 
 ## 👥 Thành viên nhóm & Phân công vai trò
 

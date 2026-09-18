@@ -2,7 +2,7 @@
 
 Mốc so sánh: `6532954` (main trước merge) → `e4c92c3` (main sau merge `demo_v0`).
 Ngày cập nhật: 2026-09-17.
-Phạm vi: `codebase/nhom-c1/codebase/`, `codebase/nhom-c1/eval/`, `eval/` và `spec.md` ở gốc repo.
+Phạm vi: `codebase/src/codebase/`, `codebase/src/eval/`, `eval/` và `spec.md` ở gốc repo.
 Mục tiêu sản phẩm: tìm tài liệu, chọn nguồn có căn cứ, viết kịch bản bài giảng, rồi duyệt từng câu.
 
 ## 1. Những gì người dùng thấy
@@ -123,9 +123,9 @@ Khi bỏ nguồn, câu phụ thuộc nguồn đó được đánh dấu để vi
 
 - `eval/` ở gốc repo bổ sung fixture HTML, manifest, golden set và rubric.
 - Fixture bao gồm nguồn tốt, mâu thuẫn, cũ, 404, paywall và prompt injection.
-- `codebase/nhom-c1/eval/golden_set.json` giữ bộ 28 case của pipeline.
+- `codebase/src/eval/golden_set.json` giữ bộ 28 case của pipeline.
 - 10/28 case được liên hệ với dữ liệu thật trong data pack của chương trình.
-- `codebase/nhom-c1/codebase/fixtures/qa-cases.json` có 10 case QA tổng hợp.
+- `codebase/src/codebase/fixtures/qa-cases.json` có 10 case QA tổng hợp.
 - `eval-refactor.js` kiểm QA, vòng đời phiên, revision và URL nội bộ.
 - `verify-btc-eval.js` kiểm cấu trúc golden set và báo cáo theo checklist BTC.
 - Kết quả `stub` trước đó: 28/28 case fixture.
@@ -147,12 +147,12 @@ Khi bỏ nguồn, câu phụ thuộc nguồn đó được đánh dấu để vi
 - `PLAN-REFACTOR-UI-RESEARCH-QA.md` ghi checklist tiến độ và việc còn lại.
 - `README.md` mô tả cách chạy, API, cấu hình, kết quả và giới hạn.
 - `EVAL-REFACTOR-REPORT.*` lưu kết quả bộ QA tổng hợp.
-- `codebase/nhom-c1/eval/run_results.*` lưu lượt eval `openai` 26/28 hiện tại.
+- `codebase/src/eval/run_results.*` lưu lượt eval `openai` 26/28 hiện tại.
 
 ## 7. Cách chạy cho dev
 
 ```powershell
-cd codebase/nhom-c1/codebase
+cd codebase/src/codebase
 npm install
 npm --prefix ui install
 npm run dev

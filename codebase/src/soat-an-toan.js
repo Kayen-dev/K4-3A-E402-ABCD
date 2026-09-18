@@ -35,12 +35,12 @@ function soatGitRoot() {
     return null;
   }
   const projectRelative = relative(top, ROOT).replace(/\\/g, '/');
-  const dungCho = projectRelative === '' || projectRelative === 'codebase/nhom-c1';
+  const dungCho = projectRelative === '' || projectRelative === 'codebase/src';
   if (dungCho) {
     inRa(true, `Repo git nằm đúng tại ${basename(top)}`);
   } else {
     inRa(false, `NGUY HIỂM: repo git nằm ở "${top}"`,
-      "Dự án phải nằm tại gốc repo riêng hoặc codebase/nhom-c1 trong repo nhóm.\n" +
+      "Dự án phải nằm tại gốc repo riêng hoặc codebase/src trong repo nhóm.\n" +
       "      Kiểm tra remote và file data được theo dõi trước khi push.");
     loi.push("git root sai chỗ");
   }
