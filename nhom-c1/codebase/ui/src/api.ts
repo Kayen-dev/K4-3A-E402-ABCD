@@ -73,7 +73,7 @@ export type Project = {
   approvedRevision: number | null;
   reviewStatus: string;
   reviewFeedbackIds?: string[];
-  run: { status: string; message: string } | null;
+  run: { status: string; message: string; action?: string } | null;
   audit: unknown[];
 };
 export type Summary = {

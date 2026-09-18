@@ -5,6 +5,7 @@ import { join, dirname, extname, normalize, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createProject, getProject, listProjects, deleteProject, actionProject } from './src/projects.js';
 import { provider } from './src/llm.js';
+import { RESPONSE_TIMEOUT_MS } from './src/run-limits.js';
 import { login, currentUser, requireRole, sessionCookie, clearSessionCookie } from './src/auth.js';
 import { listFeedback, createFeedback, updateFeedback, deleteFeedback, decideFeedback } from './src/feedback.js';
 
@@ -72,13 +73,13 @@ export async function handleRequest(req, res) {
           try {
             const project = await Promise.race([
               actionProject(id, input, emit),
-              new Promise((_, reject) => { deadline = setTimeout(() => reject(Object.assign(new Error('Xử lý quá thời gian cho phép. Hãy thử lại hoặc chọn ít tài liệu hơn.'), { code: 'RUN_TIMEOUT' })), process.env.VERCEL ? 55_000 : 130_000); }),
+              new Promise((_, reject) => { deadline = setTimeout(() => reject(Object.assign(new Error('Xử lý quá thời gian cho phép. Hãy thử lại hoặc chọn ít tài liệu hơn.'), { code: 'RUN_TIMEOUT' })), RESPONSE_TIMEOUT_MS); }),
             ]);
             emit({ type: 'result', project });
           }
           catch (e) {
             console.error('[action]', input.action, id, e.code || e.name);
-            emit({ type: 'error', code: e.code || 'RUN_FAILED', message: e.code === 'RUN_TIMEOUT' ? e.message : e.status >= 500 ? 'Tác vụ thất bại. Thử lại hoặc liên hệ người quản trị.' : e.message });
+            emit({ type: 'error', code: e.code || 'RUN_FAILED', message: ['RUN_TIMEOUT', 'LLM_TIMEOUT'].includes(e.code) ? e.message : e.status >= 500 ? 'Tác vụ thất bại. Thử lại hoặc liên hệ người quản trị.' : e.message });
           } finally { clearTimeout(deadline); }
           return res.end();
         }

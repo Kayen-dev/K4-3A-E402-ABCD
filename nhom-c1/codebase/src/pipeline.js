@@ -21,6 +21,8 @@ import { scrape } from "./scrape.js";
 import { createHash } from "node:crypto";
 import { canUseSource } from "./source-policy.js";
 import { askJson } from "./llm.js";
+import { generationTimeoutMs } from './run-limits.js';
+import { selectSourceContext } from './source-context.js';
 import { p1_truyVan, p2_chamNguon, p3_vietCau, p4_soatVanNoi, p5_kiemChung } from "./prompts.js";
 import {
   quaHan, doLenhAn, demNguonDocLap, doMauThuan,
@@ -266,22 +268,31 @@ export async function soatVanNoi(cauList, factsById, dangDung, { boQuaAI = false
 export async function vietCau({ chu_de, muc_tieu, nguoi_hoc, so_cau, nguonList, onLog, signal }) {
   // Chỉ nguồn được phép dùng. Nguồn thiếu tác giả chỉ vào context khi đã được
   // người dùng duyệt; nội dung có chỉ thị ẩn luôn ở ngoài prompt.
-  const dungDuoc = nguonList
-    .filter(n => canUseSource(n) && (n.trang_thai !== 'loai' || n.approved))
-    .map(n => ({
+  const selected = nguonList.filter(n => canUseSource(n) && (n.trang_thai !== 'loai' || n.approved));
+  const budget = Math.min(8000, Math.floor(24_000 / Math.max(1, selected.length)));
+  const dungDuoc = selected.map(n => {
+    const content = selectSourceContext(n, { topic: chu_de, goal: muc_tieu, budget });
+    if (content.length < (n.snapshot || '').length) {
+      onLog?.('f', `Tài liệu ${n.meta?.tieu_de || n.nguon_id}: chọn ${content.length}/${n.snapshot.length} ký tự liên quan để giảm thời gian viết. Nội dung gốc vẫn được giữ.`);
+    }
+    return {
       nguon_id: n.nguon_id,
       url: n.url,
       tieu_de: n.meta?.tieu_de || n.url,
       ngay_dang: n.meta?.ngay_dang || null,
       do_tin_cay: n.do_tin_cay,
       canh_bao: n.canh_bao,
-      doan_trich: n.trich_dan,
-      noi_dung_bai_viet: n.snapshot || '',
+      doan_trich: (n.trich_dan || []).filter(quote => content.includes(quote)),
+      noi_dung_bai_viet: content,
       media: n.media || [],
-    }));
+    };
+  });
 
   const prompt = p3_vietCau({ chu_de, muc_tieu, nguoi_hoc, so_cau, facts: dungDuoc });
-  const ai = await askJson({ ...prompt, stubKey: "default", onLog, signal });
+  const ai = await askJson({ ...prompt, stubKey: "default", onLog, signal,
+    timeoutMs: generationTimeoutMs(), maxRetry: 0,
+    maxTokens: Math.min(12_000, Math.max(4096, so_cau * 240 + 1024)),
+  });
 
   // Evidence must be an exact substring of the article supplied to the model.
   const trichTheoNguon = Object.fromEntries(dungDuoc.map(n => [n.nguon_id, n]));

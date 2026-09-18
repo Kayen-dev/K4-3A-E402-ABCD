@@ -1134,9 +1134,17 @@ function TeacherApp({ user, onLogout }: { user: User; onLogout: () => void }) {
       notify(action === "generate" ? "Đã tạo kịch bản nháp." : "Đã lưu kết quả.");
       return nextProject;
     } catch (err) {
-      setError((err as Error).message);
       const latest = await getProject(baseProject.id).catch(() => null);
       if (latest) setProject(latest);
+      if (latest && ['generate', 'rewrite', 'review'].includes(action) && latest.revision > baseProject.revision && latest.run?.status === 'complete' && latest.run.action === action && latest.sentences.length > 0) {
+        setStep(3);
+        setFindingEdits({});
+        setError('');
+        notify('Đã mở kết quả được lưu trên máy chủ.');
+        refreshList();
+        return latest;
+      }
+      setError((err as Error).message);
       return null;
     } finally {
       setBusy(false);

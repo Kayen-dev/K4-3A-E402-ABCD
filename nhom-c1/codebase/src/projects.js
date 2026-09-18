@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { ACTION_TIMEOUT_MS, RUN_LEASE_MS } from './run-limits.js';
 import { readProject, writeProject, listProjectIds, removeProject } from './storage.js';
 import { searchUrls, assessUrls } from './research.js';
 import { canUseSource } from './source-policy.js';
@@ -31,7 +32,7 @@ async function save(p) {
 export async function getProject(id) {
   try {
     const p = await readProject(pathFor(id));
-    const leaseExpired = !process.env.VERCEL || Date.now() - Date.parse(p.run?.startedAt || 0) > 90_000;
+    const leaseExpired = !process.env.VERCEL || Date.now() - Date.parse(p.run?.startedAt || 0) > RUN_LEASE_MS;
     if (p.run?.status === 'running' && !runs.has(id) && leaseExpired) {
       p.run.status = 'interrupted'; p.run.message = 'Tác vụ bị gián đoạn. Bạn có thể thử lại.';
       await save(p);
@@ -197,7 +198,7 @@ async function longAction(id, body, emit) {
   const progress = e => emit({ runId, sequence: ++sequence, ...e });
   const onLog = (_level, message) => progress({ type: 'progress', message });
   const timeout = fault(504, 'RUN_TIMEOUT', 'Xử lý quá thời gian cho phép. Hãy chọn ít tài liệu hơn hoặc thử lại.');
-  const deadline = setTimeout(() => controller.abort(timeout), process.env.VERCEL ? 50_000 : 120_000);
+  const deadline = setTimeout(() => controller.abort(timeout), ACTION_TIMEOUT_MS);
   const beganAt = Date.now();
   let stage = 'Đang chuẩn bị dữ liệu';
   const report = message => {
@@ -237,7 +238,7 @@ async function longAction(id, body, emit) {
       if (!Array.isArray(result.cau) || !result.cau.length || result.cau.length > 40 || result.cau.some(c => typeof c.loi !== 'string' || !c.loi.trim() || c.loi.length > 2000)) throw fault(502, 'INVALID_DRAFT', 'Kết quả viết chưa hợp lệ. Thử lại sau.');
       if (body.action === 'rewrite' && start.sentences.some((s, i) => s.needsRewrite && i >= result.cau.length)) throw fault(502, 'INCOMPLETE_REWRITE', 'Chưa viết đủ câu bị ảnh hưởng. Thử lại sau.');
       report('Bước 3/4: Đã có bản nháp. Đang đối chiếu thông tin với đoạn trích nguồn.');
-      const verificationBudget = process.env.VERCEL ? Math.min(10_000, 45_000 - (Date.now() - beganAt)) : 30_000;
+      const verificationBudget = Math.min(30_000, ACTION_TIMEOUT_MS - 15_000 - (Date.now() - beganAt));
       const draftFacts = gomFact(result.facts, eligible(start)).facts;
       result.verifiedFacts = await kiemChungClaims(draftFacts, {
         onLog, signal: controller.signal, timeoutMs: Math.max(1, verificationBudget),

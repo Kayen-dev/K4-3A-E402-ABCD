@@ -123,6 +123,7 @@ export function p3_vietCau({ chu_de, muc_tieu, nguoi_hoc, so_cau, facts }) {
       "Mỗi fact khai bang_chung: danh sách {nguon_id, doan_trich}. doan_trich phải là",
       "một đoạn NGUYÊN VĂN trong doan_trich hoặc noi_dung_bai_viet của đúng nguồn đó (20–1000 ký tự).",
       "Code sẽ đối chiếu lại; đoạn nào không khớp sẽ bị loại khỏi bằng chứng.",
+      "Ưu tiên đoạn chứng minh ngắn nhất, khoảng 20–200 ký tự. Tái sử dụng fact_ids khi các câu dùng cùng thông tin, không lặp lại fact và đoạn trích để làm dài đầu ra.",
       "Mỗi cảnh có thể khai media_url từ danh sách media của chính nguồn chống lưng cho cảnh đó.",
       "Chỉ chọn ảnh/video thực sự phù hợp nội dung cảnh; không có thì để null. Không tự tạo link media.",
       "",

@@ -164,6 +164,10 @@ async function goi(url, opts, timeout_ms, signal) {
     // Keep the deadline active until the provider finishes sending its JSON.
     const text = await response.text();
     return new Response(text, { status: response.status, headers: response.headers });
+  } catch (error) {
+    if (signal?.aborted) throw signal.reason;
+    if (ctrl.signal.aborted) throw Object.assign(new Error(`AI chưa trả kết quả trong ${Math.round(timeout_ms / 1000)} giây. Chưa tạo được bản nháp; hãy thử lại.`), { code: 'LLM_TIMEOUT', status: 504 });
+    throw error;
   } finally {
     clearTimeout(t);
     signal?.removeEventListener('abort', abort);
@@ -341,11 +345,12 @@ async function callStub({ name, stubKey }) {
  * @param {string} user     user prompt
  * @param {string} stubKey  khoá tra trong fixtures khi chạy provider=stub
  */
-export async function askJson({ name, system, user, stubKey, onLog, signal, timeoutMs, maxRetry }) {
+export async function askJson({ name, system, user, stubKey, onLog, signal, timeoutMs, maxRetry, maxTokens }) {
   const c = cauHinh();
   c.signal = signal;
-  if (timeoutMs !== undefined) c.timeout_ms = Math.min(c.timeout_ms, timeoutMs);
+  if (timeoutMs !== undefined) c.timeout_ms = timeoutMs;
   if (maxRetry !== undefined) c.max_retry = maxRetry;
+  if (maxTokens !== undefined) c.max_tokens = maxTokens;
   const { provider } = c;
   const t0 = Date.now();
 
@@ -370,7 +375,7 @@ export async function askJson({ name, system, user, stubKey, onLog, signal, time
       ` (gemini | anthropic | openai | openrouter | stub)`);
   };
 
-  let raw, error = null, soLanThu = 0, nhacJson = false, soLanNhacJson = 0, loiVinhVien = false;
+  let raw, error = null, errorCode, errorStatus, soLanThu = 0, nhacJson = false, soLanNhacJson = 0, loiVinhVien = false;
   for (let lan = 0; ; lan++) {
     signal?.throwIfAborted();
     // Xếp hàng + giãn cách. Chế độ stub không đi mạng nên không cần chờ.
@@ -382,6 +387,8 @@ export async function askJson({ name, system, user, stubKey, onLog, signal, time
       error = null;
     } catch (e) {
       error = e.message;
+      errorCode = e.code;
+      errorStatus = e.status;
       if (signal?.aborted) throw signal.reason;
       loiVinhVien = !!e.vinhVien;
       // 429 là hết hạn mức, KHÔNG phải lỗi logic — chờ đúng số giây API bảo rồi thử lại.
@@ -429,6 +436,8 @@ export async function askJson({ name, system, user, stubKey, onLog, signal, time
 
   if (error) {
     const e = new Error(`[${name}] ${error}`);
+    if (errorCode) e.code = errorCode;
+    if (errorStatus) e.status = errorStatus;
     // Chuyển cờ ra ngoài: pipeline cần biết "gọi nữa cũng thế" để dừng sớm.
     if (loiVinhVien) e.vinhVien = true;
     throw e;
