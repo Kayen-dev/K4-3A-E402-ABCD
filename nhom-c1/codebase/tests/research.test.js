@@ -8,10 +8,26 @@ import { bocNoiDung, scrape, danhSachFixture } from '../src/scrape.js';
 import { searchUrls, buildResearchQueries } from '../src/research.js';
 import { createProject, actionProject } from '../src/projects.js';
 import { writeProject } from '../src/storage.js';
+import { isClearlyOffTopic } from '../src/topic-relevance.js';
 
 const base = 'https://93.184.216.34';
 const paragraph = 'Trí tuệ nhân tạo là lĩnh vực nghiên cứu các hệ thống có khả năng học và xử lý thông tin. ';
 const savedEnv = { ...process.env };
+
+test('plant nutrition search keeps its domain and discards clearly human nutrition results', async t => {
+  process.env.TAVILY_API_KEY = 'test-key';
+  const topic = 'Dinh dưỡng cho lá cây';
+  assert(buildResearchQueries(topic, 'Hiểu nhu cầu dinh dưỡng').every(query => query.startsWith(topic) && query.includes('thực vật')));
+  assert.equal(isClearlyOffTopic(topic, 'Dinh dưỡng cho trẻ em và bà bầu'), true);
+  assert.equal(isClearlyOffTopic(topic, 'Dinh dưỡng khoáng của thực vật và cây trồng'), false);
+  assert.equal(isClearlyOffTopic(topic, 'Chế độ ăn con người và nhu cầu dinh dưỡng thực vật'), false);
+  t.mock.method(globalThis, 'fetch', async () => Response.json({ results: [
+    { url: `${base}/human`, title: 'Dinh dưỡng cho con người', content: 'Chế độ ăn cho trẻ em' },
+    { url: `${base}/plant`, title: 'Dinh dưỡng cho lá cây', content: 'Phân bón và dinh dưỡng khoáng thực vật' },
+  ] }));
+  try { assert.deepEqual(await searchUrls(topic), [`${base}/plant`]); }
+  finally { restoreEnvironment(); }
+});
 function restoreEnvironment() {
   for (const key of Object.keys(process.env)) if (!(key in savedEnv)) delete process.env[key];
   Object.assign(process.env, savedEnv);

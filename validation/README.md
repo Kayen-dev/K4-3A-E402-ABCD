@@ -1,5 +1,7 @@
 # Cho người ngoài nhóm dùng thử (R6 — bonus, tối đa +8 điểm)
 
+Nhật ký phản hồi và quyết định xử lý: [user_testing_log.md](user_testing_log.md).
+
 Không làm thì trần điểm là 92. Làm ở mốc CP5.
 
 Cần đủ bốn thứ:

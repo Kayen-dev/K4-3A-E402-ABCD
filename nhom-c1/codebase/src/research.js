@@ -1,15 +1,17 @@
 import { quyetDinhNguon } from './pipeline.js';
 import { validatePublicUrl, scrape } from './scrape.js';
 import { createHash } from 'node:crypto';
+import { isClearlyOffTopic, plantSearchContext } from './topic-relevance.js';
 
 export function buildResearchQueries(topic, goal = '') {
   const objectiveText = String(goal).trim();
-  if (!objectiveText) return [topic, `${topic} nghiên cứu tài liệu`, `${topic} research evidence`];
+  const domain = plantSearchContext(topic);
+  if (!objectiveText) return [`${topic}${domain}`, `${topic}${domain} nghiên cứu tài liệu`, `${topic}${domain} research evidence`];
   const objectives = objectiveText.split(/[\n.;]+/).map(x => x.replace(/^\s*[-•\d)]+\s*/, '').trim()).filter(Boolean);
   return [...new Set([
-    topic,
-    `${topic} ${objectiveText}`,
-    ...objectives.map(objective => `${topic} ${objective}`),
+    `${topic}${domain}`,
+    `${topic}${domain} ${objectiveText}`,
+    ...objectives.map(objective => `${topic}${domain} ${objective}`),
   ])];
 }
 
@@ -30,6 +32,7 @@ export async function searchUrls(topic, goal = '', signal, onQuery = () => {}) {
     if (!res.ok) throw new Error(`Tìm kiếm gặp lỗi HTTP ${res.status}`);
     const data = await res.json();
     for (const row of data.results || []) {
+      if (isClearlyOffTopic(topic, `${row.title || ''} ${row.content || ''}`)) continue;
       try {
         const url = await validatePublicUrl(row.url);
         const normalized = new URL(url); normalized.hash = ''; normalized.searchParams.delete('utm_source'); normalized.searchParams.delete('utm_medium');
@@ -60,6 +63,10 @@ export async function assessUrls(urls, topic, goal = '', emit = () => {}, signal
           trang_thai: page.lenh_an?.length ? 'loai' : page.ok ? 'chua-cham' : 'khong-doc-duoc', cach_ly: page.lenh_an || [], trich_dan: [],
           ly_do: page.ok ? 'Đã đọc trang nhưng chưa đánh giá được. Liên hệ người quản trị để cấu hình dịch vụ.' : page.ly_do };
       } else result = await quyetDinhNguon(urls[i], { chu_de: topic, muc_tieu: goal, signal });
+      if (isClearlyOffTopic(topic, `${result.meta?.tieu_de || ''} ${result.snapshot || ''}`)) {
+        emit({ type: 'progress', message: 'Bỏ qua tài liệu về dinh dưỡng con người vì chủ đề đang tìm là thực vật.' });
+        continue;
+      }
       output[i] = { ...result, nguon_id: `s${i + 1}`, approved: false };
       emit({ type: 'progress', message: `Đã đọc ${output.filter(Boolean).length}/${urls.length} tài liệu`, source: output[i] });
     }

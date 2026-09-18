@@ -181,6 +181,9 @@ Hạn chế còn lại: chưa có test UX 5 người dùng mục tiêu; chưa đ
 
 | Thời điểm | Đổi gì | Vì sao (trỏ về feedback/case nào) |
 |---|---|---|
+| 2026-09-18 user testing | Bổ sung feedback Nguyễn Duy Phong 2A202602834 và Nguyễn Trí Dũng; thêm ngữ cảnh thực vật và lọc nguồn rõ ràng lệch đối tượng; giải thích tác giả/đơn vị xuất bản, hiển thị 5 tiêu chí cùng nhận xét; chuyển validation về thư mục gốc theo vị trí tài liệu hiện tại | `validation/user_testing_log.md`: research lá cây trả dinh dưỡng con người và đánh giá nguồn chưa giải thích rõ |
+| 2026-09-18 ghi nhận validation | Ghi nhận phản hồi Nguyễn Trường Bảo và các cải thiện đã thực hiện về context từ nguồn được chọn, kịch bản hoàn chỉnh và đối chiếu evidence với snapshot; chờ đánh giá lại | `validation/user_testing_log.md`: kịch bản chưa bám nội dung reference và còn chưa chính xác |
+| 2026-09-18 Vercel fix | Sử dụng ETag metadata khi cập nhật Blob, phát hiện thay đổi trong lúc đọc và trả 409 cho precondition conflict; bổ sung AUTH_SESSION_SECRET production và deploy; smoke test đăng nhập 200, tạo phiên 201, action 200, revision cũ 409, xóa phiên thử 200 | Log production ghi nhận BlobPreconditionFailedError và AUTH_NOT_CONFIGURED; 18 bài kiểm thử đạt |
 | 2026-09-16 CP1 | Chốt hướng C, job executor, pain, mining evidence ban đầu | Canvas CP1 `nhom-c1/docs/cp1-canvas.md` |
 | 2026-09-16 | Mining kịch bản 40 câu và hồ sơ nguồn mẫu | Evidence B: 28/40 cần căn cứ, 0/40 có nguồn theo câu, 2/5 nguồn có vấn đề |
 | 2026-09-17 trước refactor | Golden set đạt 24/28 | Phát hiện G25-G28 và các mép injection/conflict/register |
