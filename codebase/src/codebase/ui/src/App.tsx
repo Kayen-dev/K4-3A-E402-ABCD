@@ -30,6 +30,7 @@ import {
   projectAction,
   getSession,
   login as loginAccount,
+  registerStudent,
   logout as logoutAccount,
   type Finding,
   type Project,
@@ -1623,6 +1624,6 @@ export default function App() {
     setUser(null);
   };
   if (checkingSession) return <div className="flex min-h-screen items-center justify-center bg-[#f6f8fb] text-sm font-semibold text-slate-600">Đang kiểm tra đăng nhập...</div>;
-  if (!user) return <LoginScreen onLogin={async (email, password, role) => { setUser(await loginAccount(email, password, role)); }} />;
+  if (!user) return <LoginScreen onLogin={async (email, password, role) => { setUser(await loginAccount(email, password, role)); }} onRegister={async input => { setUser(await registerStudent(input)); }} />;
   return user.role === "teacher" ? <TeacherApp user={user} onLogout={signOut} /> : <StudentPortal user={user} onLogout={signOut} />;
 }

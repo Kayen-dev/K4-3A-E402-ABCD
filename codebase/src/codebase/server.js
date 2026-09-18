@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { createProject, getProject, listProjects, deleteProject, actionProject } from './src/projects.js';
 import { provider } from './src/llm.js';
 import { RESPONSE_TIMEOUT_MS } from './src/run-limits.js';
-import { login, currentUser, requireRole, sessionCookie, clearSessionCookie } from './src/auth.js';
+import { login, registerStudent, currentUser, requireRole, sessionCookie, clearSessionCookie } from './src/auth.js';
 import { listFeedback, createFeedback, updateFeedback, deleteFeedback, decideFeedback } from './src/feedback.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -27,9 +27,14 @@ export async function handleRequest(req, res) {
     if (url.pathname === '/api/auth/session' && req.method === 'GET') return json(res, 200, { user: currentUser(req) });
     if (url.pathname === '/api/auth/login' && req.method === 'POST') {
       const input = await body(req);
-      const user = login(input.email, input.password, input.role);
+      const user = await login(input.email, input.password, input.role);
       res.setHeader('set-cookie', sessionCookie(user, secureCookie));
       return json(res, 200, { user });
+    }
+    if (url.pathname === '/api/auth/register' && req.method === 'POST') {
+      const user = await registerStudent(await body(req));
+      res.setHeader('set-cookie', sessionCookie(user, secureCookie));
+      return json(res, 201, { user });
     }
     if (url.pathname === '/api/auth/logout' && req.method === 'POST') {
       res.setHeader('set-cookie', clearSessionCookie(secureCookie));

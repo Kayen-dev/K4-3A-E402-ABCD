@@ -10,6 +10,26 @@ const etags = new WeakMap();
 const blobMode = () => !!process.env.VERCEL;
 const pathname = id => `projects/${id}.json`;
 const feedbackPath = id => `feedback/${id}.json`;
+const studentsFile = () => process.env.STUDENTS_FILE || join(ROOT, 'runtime', 'students.json');
+export async function readStudents() {
+  try {
+    if (blobMode()) return await readBlobJson('accounts/students.json', 'Missing students');
+    return JSON.parse(await readFile(studentsFile(), 'utf8'));
+  } catch (e) { if (e.code === 'ENOENT') return { students: [] }; throw e; }
+}
+export async function writeStudents(registry) {
+  if (blobMode()) {
+    const { put } = await blob();
+    try { await put('accounts/students.json', JSON.stringify(registry), conditionalBlobOptions(registry)); }
+    catch (e) { throw storageError(e); }
+    return;
+  }
+  const path = studentsFile();
+  await mkdir(dirname(path), { recursive: true });
+  const temp = `${path}.${randomUUID()}.tmp`;
+  await writeFile(temp, JSON.stringify(registry), { flag: 'wx' });
+  await rename(temp, path);
+}
 async function blob() {
   if (!process.env.BLOB_READ_WRITE_TOKEN) throw Object.assign(new Error('Chưa cấu hình lưu trữ bền vững'), { status: 503, code: 'STORAGE_NOT_CONFIGURED' });
   return import('@vercel/blob');

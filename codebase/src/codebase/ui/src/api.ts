@@ -84,12 +84,18 @@ export type Summary = {
   updatedAt: string;
   revision: number;
 };
-export type User = { email: string; role: "teacher" | "student" };
+export type User = { email: string; role: "teacher" | "student"; id?: string; fullName?: string; studentId?: string };
+export type StudentRegistration = { email: string; password: string; fullName: string; studentId: string };
+export async function registerStudent(input: StudentRegistration): Promise<User> {
+  return (await parse(await fetch('/api/auth/register', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(input) }))).user;
+}
 export type Feedback = {
   id: string;
   title: string;
   content: string;
   authorEmail: string;
+  authorName?: string;
+  authorStudentId?: string;
   status: "pending" | "approved" | "rejected";
   createdAt: string;
   updatedAt: string;

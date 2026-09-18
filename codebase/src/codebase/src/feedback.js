@@ -39,7 +39,7 @@ export async function listFeedback(user) {
 
 export async function createFeedback(user, input) {
   if (user.role !== 'student') throw fault(403, 'FORBIDDEN', 'Chỉ học sinh có thể gửi góp ý');
-  const feedback = { id: randomUUID(), ...fields(input), authorEmail: user.email,
+  const feedback = { id: randomUUID(), ...fields(input), authorEmail: user.email, authorName: user.fullName, authorStudentId: user.studentId,
     status: 'pending', createdAt: now(), updatedAt: now(), reviewedAt: null, reviewedBy: null };
   await writeFeedback(feedback);
   return feedback;
