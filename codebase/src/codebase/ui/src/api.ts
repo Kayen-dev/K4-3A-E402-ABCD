@@ -38,6 +38,7 @@ export type Sentence = {
   needsVerification?: boolean;
 };
 export type Finding = {
+  stale?: boolean;
   id: string;
   sentenceId: string;
   quote: string | null;

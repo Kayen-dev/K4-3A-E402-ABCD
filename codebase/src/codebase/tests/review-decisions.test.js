@@ -22,6 +22,19 @@ test('manual correction, final approval, and subsequent edits respect revision s
     assert.equal(p.approvedRevision, p.revision);
     p = await actionProject(p.id, { action: 'edit-sentence', revision: p.revision, sentenceId: p.sentences[0].id, text: 'Thay đổi sau chốt.' });
     assert.equal(p.approvedRevision, null);
+    let multi = await createProject({ mode: 'qa', script: 'Dùng JAX để chạy trên GPU.' });
+    multi.reviewStatus = 'complete';
+    multi.findings = ['JAX', 'GPU'].map((quote, index) => ({ id: `g${index}`, sentenceId: multi.sentences[0].id, quote,
+      start: multi.sentences[0].text.indexOf(quote), end: multi.sentences[0].text.indexOf(quote) + quote.length,
+      originalSentence: multi.sentences[0].text, decision: null }));
+    await writeProject(multi);
+    const events = [];
+    multi = await actionProject(multi.id, { action: 'decision', revision: multi.revision, findingId: 'g0', decision: 'accept', replacement: 'giắc' }, event => events.push(event));
+    assert.ok(events.some(event => event.message.includes('Đang kiểm tra góp ý')));
+    assert.ok(events.some(event => event.message.includes('Đã lưu thay đổi thành công')));
+    multi = await actionProject(multi.id, { action: 'decision', revision: multi.revision, findingId: 'g1', decision: 'accept', replacement: 'bộ xử lý đồ họa' });
+    multi = await actionProject(multi.id, { action: 'decision', revision: multi.revision, findingId: 'g0', decision: 'undo' });
+    assert.equal(multi.sentences[0].text, 'Dùng JAX để chạy trên bộ xử lý đồ họa.');
   } finally {
     if (previousDir === undefined) delete process.env.PROJECTS_DIR; else process.env.PROJECTS_DIR = previousDir;
     await rm(directory, { recursive: true, force: true });

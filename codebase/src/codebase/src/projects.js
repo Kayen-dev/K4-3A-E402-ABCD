@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { acceptFinding, undoFinding } from './finding-edits.js';
 import { ACTION_TIMEOUT_MS, RUN_LEASE_MS } from './run-limits.js';
 import { readProject, writeProject, listProjectIds, removeProject } from './storage.js';
 import { searchUrls, assessUrls } from './research.js';
@@ -88,7 +89,7 @@ function normalizeFindings(p, raw) {
       decision: null, originalSentence: sentence.text, previousText: null }];
   });
 }
-async function mutate(id, expected, fn) {
+async function mutate(id, expected, fn, emit = () => {}) {
   return locked(id, async () => {
     const p = await getProject(id);
     if (p.revision !== expected) throw fault(409, 'REVISION_CONFLICT', 'Phiên đã thay đổi. Tải lại rồi thử tiếp.');
@@ -96,7 +97,10 @@ async function mutate(id, expected, fn) {
     const approvingNextRevision = p.approvedRevision === p.revision + 1;
     change(p);
     if (approvingNextRevision) p.approvedRevision = p.revision;
-    await save(p); return result || p;
+    emit({ type: 'progress', message: 'Đang lưu thay đổi và nhật ký chỉnh sửa.' });
+    await save(p);
+    emit({ type: 'progress', message: 'Đã lưu thay đổi thành công.' });
+    return result || p;
   });
 }
 export async function deleteProject(id) {
@@ -163,22 +167,20 @@ export async function actionProject(id, body, emit = () => {}) {
         const s = p.sentences.find(x => x.id === f?.sentenceId);
         if (!f || !s || !['accept', 'reject', 'undo'].includes(body.decision)) throw fault(400, 'INVALID_FINDING', 'Góp ý không hợp lệ');
         const before = s.text;
+        emit({ type: 'progress', message: `Đang kiểm tra góp ý cho câu ${s.scene}.` });
         if (body.decision === 'accept') {
           const replacement = String(body.replacement ?? f.replacement ?? '').trim();
           if (f.decision || !replacement || replacement.length > 2000) throw fault(400, 'INVALID_REPLACEMENT', 'Nhập nội dung sửa tối đa 2.000 ký tự');
-          const start = f.quote ? s.text.indexOf(f.quote) : 0;
-          const end = f.quote ? start + f.quote.length : s.text.length;
-          if (start < 0 || (f.quote && s.text.indexOf(f.quote, start + 1) >= 0) || (!f.quote && s.text !== f.originalSentence)) throw fault(409, 'STALE_FINDING', 'Câu đã thay đổi hoặc đoạn sửa không rõ vị trí. Hãy rà soát lại.');
-          const next = s.text.slice(0, start) + replacement + s.text.slice(end);
-          if (next.length > 2000) throw fault(400, 'INVALID_REPLACEMENT', 'Câu sau khi sửa tối đa 2.000 ký tự');
-          f.previousText = s.text; s.text = next; f.replacement = replacement; f.decision = 'accepted'; p.reviewStatus = 'stale';
+          acceptFinding(p, s, f, replacement);
+          emit({ type: 'progress', message: `Câu ${s.scene}: đã thay “${f.quote || 'toàn bộ câu'}” bằng “${f.replacement}”.` });
+          emit({ type: 'progress', message: 'Đã cập nhật vị trí các góp ý khác trong câu.' });
         } else if (body.decision === 'reject') { f.decision = 'rejected'; }
-        else { if (f.decision === 'accepted' && f.previousText) s.text = f.previousText; f.decision = null; f.previousText = null; p.reviewStatus = 'stale'; }
+        else { undoFinding(p, s, f); emit({ type: 'progress', message: `Đã hoàn tác riêng góp ý ở câu ${s.scene}.` }); }
         audit(p, body.decision, f.id, before, s.text);
       }
     } else throw fault(400, 'INVALID_ACTION', 'Hành động không hợp lệ');
     if (requestId) p.requestIds = [...p.requestIds, requestId].slice(-50);
-  });
+  }, emit);
 }
 
 async function longAction(id, body, emit) {

@@ -960,6 +960,8 @@ function TeacherApp({ user, onLogout }: { user: User; onLogout: () => void }) {
   const [mode, setMode] = useState<"research" | "qa">("research");
   const [step, setStep] = useState(1);
   const [findingEdits, setFindingEdits] = useState<Record<string, string>>({});
+  const [activeFinding, setActiveFinding] = useState<string | null>(null);
+  const [findingLogs, setFindingLogs] = useState<Record<string, string[]>>({});
   const [brief, setBrief] = useState<BriefForm>({
     topic: "",
     goal: "",
@@ -1274,6 +1276,22 @@ function TeacherApp({ user, onLogout }: { user: User; onLogout: () => void }) {
     speakNext();
   }
 
+  async function decideFinding(finding: Finding, decision: 'accept' | 'reject' | 'undo') {
+    if (busy || activeFinding) return;
+    setActiveFinding(finding.id);
+    const logs: string[] = ['Đang gửi yêu cầu cập nhật góp ý.'];
+    setFindingLogs(previous => ({ ...previous, [finding.id]: logs }));
+    // run() receives streamed progress; keep the per-card log after completion.
+    try {
+      const next = await run('decision', { findingId: finding.id, decision, replacement: findingEdits[finding.id] ?? finding.replacement }, 'save');
+      setFindingLogs(previous => ({ ...previous, [finding.id]: [...(previous[finding.id] || []), next ? 'Đã lưu và cập nhật kịch bản.' : 'Chưa lưu được thay đổi. Xem thông báo lỗi.'] }));
+    } finally { setActiveFinding(null); }
+  }
+
+  useEffect(() => {
+    if (activeFinding && progressLog.length) setFindingLogs(previous => ({ ...previous, [activeFinding]: [...progressLog] }));
+  }, [activeFinding, progressLog]);
+
   function findingView(finding: Finding) {
     const sentence = project?.sentences.find((item) => item.id === finding.sentenceId);
     return (
@@ -1286,6 +1304,8 @@ function TeacherApp({ user, onLogout }: { user: User; onLogout: () => void }) {
           <span className="text-xs text-slate-500">Câu {sentence?.scene}</span>
         </div>
         <p><span className="font-semibold">Đoạn nào:</span> {finding.quote || sentence?.text}</p>
+        {finding.quote && <p className="text-sm text-slate-500">Chỉ thay đoạn “{finding.quote}” trong câu {sentence?.scene}.</p>}
+        {finding.stale && <p className="text-sm text-amber-800">Đoạn này đã thay đổi bởi góp ý khác. Hãy rà soát lại trước khi sửa hoặc hoàn tác.</p>}
         {finding.feedbackTitle && <p className="text-sm text-indigo-700"><span className="font-semibold">Góp ý đã duyệt:</span> {finding.feedbackTitle}</p>}
         <p><span className="font-semibold">Vì sao:</span> {finding.reason}</p>
         <p><span className="font-semibold">Sửa thành gì:</span> {finding.suggestion || "Cần tự kiểm tra"}</p>
@@ -1302,8 +1322,8 @@ function TeacherApp({ user, onLogout }: { user: User; onLogout: () => void }) {
               </span>
               <button
                 className={secondary}
-                disabled={busy}
-                onClick={() => run("decision", { findingId: finding.id, decision: "undo" }, "save")}
+                disabled={busy || !!activeFinding || (finding.decision === 'accepted' && finding.stale)}
+                onClick={() => decideFinding(finding, 'undo')}
               >
                 Hoàn tác
               </button>
@@ -1316,22 +1336,23 @@ function TeacherApp({ user, onLogout }: { user: User; onLogout: () => void }) {
               </label>
               <button
                 className={primary}
-                disabled={busy || !(findingEdits[finding.id] ?? finding.replacement ?? '').trim()}
+                disabled={busy || !!activeFinding || finding.stale || !(findingEdits[finding.id] ?? finding.replacement ?? '').trim()}
                 title="Áp dụng nội dung sửa vào lời đọc"
-                onClick={() => run("decision", { findingId: finding.id, decision: "accept", replacement: findingEdits[finding.id] ?? finding.replacement }, "save")}
+                onClick={() => decideFinding(finding, 'accept')}
               >
-                Chấp nhận sửa
+                {activeFinding === finding.id ? 'Đang cập nhật…' : 'Chấp nhận sửa'}
               </button>
               <button
                 className={secondary}
                 disabled={busy}
-                onClick={() => run("decision", { findingId: finding.id, decision: "reject" }, "save")}
+                onClick={() => decideFinding(finding, 'reject')}
               >
                 Giữ nguyên
               </button>
             </>
           )}
         </div>
+        {!!findingLogs[finding.id]?.length && <div role="status" aria-live="polite" className="rounded-xl bg-slate-50 p-3 text-sm text-slate-600"><p className="font-semibold">Nhật ký chỉnh sửa</p><ol className="mt-2 space-y-1">{findingLogs[finding.id].map((entry, index) => <li key={index}>{entry}</li>)}</ol></div>}
       </article>
     );
   }

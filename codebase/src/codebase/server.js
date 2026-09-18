@@ -64,7 +64,7 @@ export async function handleRequest(req, res) {
       if (!match[2] && req.method === 'DELETE') return json(res, 200, await deleteProject(id));
       if (match[2] && req.method === 'POST') {
         const input = await body(req);
-        if (['research', 'add-source', 'generate', 'rewrite', 'review'].includes(input.action)) {
+        if (['research', 'add-source', 'generate', 'rewrite', 'review'].includes(input.action) || (input.action === 'decision' && input.findingId)) {
           res.writeHead(200, { 'content-type': 'application/x-ndjson; charset=utf-8', 'cache-control': 'no-store', 'x-accel-buffering': 'no' });
           const emit = event => { if (!res.destroyed && !res.writableEnded) res.write(JSON.stringify(event) + '\n'); };
           emit({ type: 'started', message: 'Đang xử lý' });
