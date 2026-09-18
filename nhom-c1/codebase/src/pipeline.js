@@ -131,10 +131,12 @@ export async function quyetDinhNguon(url, { chu_de, muc_tieu = '', fixtures, ngu
   const [t1, t2, t3, t4, t5] = kq.diem_tieu_chi;
   if (t1 !== 1 || t4 !== 1 || t5 !== 1) {
     kq.trang_thai = "loai";
-    kq.ly_do = t1 !== 1
-      ? "Không truy được người chịu trách nhiệm (trượt tiêu chí 1)."
-      : t5 !== 1 ? "Trang chứa chỉ thị ẩn (trượt tiêu chí 5)."
-      : "Nội dung chưa phù hợp với bài học.";
+    const reasons = [];
+    if (t1 !== 1) reasons.push('Chưa xác định được tác giả hoặc tổ chức đứng sau bài viết từ thông tin hệ thống đọc được. Đây là tiêu chí 1: có thể truy nguồn người viết hoặc đơn vị xuất bản để kiểm tra độ tin cậy; không phải trách nhiệm pháp lý. Có thể trang ghi thông tin ở vị trí hệ thống chưa đọc được, nên giảng viên cần mở link kiểm tra.');
+    if (t4 !== 1) reasons.push('Nội dung không khớp đối tượng hoặc phạm vi chủ đề bài học (tiêu chí 4).');
+    if (t5 !== 1) reasons.push('Trang chứa chỉ thị nhắm vào hệ thống AI, nên không đưa nội dung vào bước viết (tiêu chí 5).');
+    if (ai.rationale) reasons.push(`Nhận xét nội dung: ${ai.rationale}`);
+    kq.ly_do = reasons.join(' ');
     kq.do_tin_cay = "thap";
   } else if (t2 === 0 || t3 !== 1) {
     kq.trang_thai = "dung-canh-bao";

@@ -55,6 +55,8 @@ export function p2_chamNguon({ chu_de, muc_tieu = '', url, meta, text, ket_qua_c
       "và tiêu chí 5 = 0.",
       "",
       "Chấm theo đúng 5 tiêu chí đã công bố trước:",
+      "Tiêu chí 4 phải khớp đối tượng và lĩnh vực của chủ đề, không chỉ trùng từ khóa. Dinh dưỡng lá cây là thực vật; tài liệu dinh dưỡng con người không đạt chỉ vì cùng có chữ dinh dưỡng.",
+      "rationale phải giải thích cụ thể tiêu chí nào chưa đạt và thông tin nào trên trang dẫn đến nhận xét đó. Không chỉ ghi số tiêu chí hoặc một nhãn không nên dùng.",
       ...TIEU_CHI.map(t => `  ${t.id}. ${t.ten} — ${t.mo}`),
       "",
       "LUẬT XUẤT (thứ tự các khoá là bắt buộc):",

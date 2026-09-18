@@ -889,6 +889,20 @@ function ResearchPanel({
                   <p className="mt-3 break-words text-sm leading-6 text-slate-600">
                     {source.ly_do || "Chưa có ghi chú đánh giá nguồn."}
                   </p>
+                  {source.trang_thai === 'loai' && isUsable && <p className="mt-2 text-sm text-amber-800">Bạn vẫn có thể chọn tài liệu này sau khi tự kiểm tra tác giả hoặc đơn vị xuất bản. Thiếu thông tin tác giả không đồng nghĩa bài viết sai.</p>}
+                  <details className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm">
+                    <summary className="cursor-pointer font-semibold text-slate-700">Vì sao nguồn được đánh giá như vậy? Xem 5 tiêu chí</summary>
+                    <ol className="mt-3 list-decimal space-y-2 pl-5 text-slate-600">
+                      {[
+                        ['Tác giả hoặc đơn vị xuất bản', 'Có tên người viết hoặc tổ chức đứng sau nội dung để đối chiếu độ tin cậy. Hệ thống chưa tìm thấy không có nghĩa thông tin này không tồn tại.'],
+                        ['Độ cập nhật', 'Kiểm tra ngày đăng theo quy tắc thời hạn của hệ thống; nếu thiếu ngày, cần tự kiểm tra.'],
+                        ['Tài liệu gốc được dẫn lại', 'Bài viết có dẫn nghiên cứu, số liệu hoặc tài liệu gốc để kiểm tra tiếp hay không.'],
+                        ['Đúng chủ đề và đối tượng', 'Ví dụ dinh dưỡng lá cây cần tài liệu về thực vật, không chỉ trùng từ dinh dưỡng.'],
+                        ['Không có chỉ thị nhắm vào AI', 'Không dùng nội dung có chỉ thị yêu cầu hệ thống bỏ qua quy tắc hoặc thao túng kết quả.'],
+                      ].map(([title, description], criterion) => <li key={title}><strong>{title}</strong> · {source.diem_tieu_chi ? (source.diem_tieu_chi[criterion] === 1 ? 'Đạt' : 'Chưa đạt / cần kiểm tra') : 'Chưa đánh giá'}<p className="mt-1">{description}</p></li>)}
+                    </ol>
+                    {source.rationale && <p className="mt-3 break-words"><strong>Nhận xét nội dung:</strong> {source.rationale}</p>}
+                  </details>
                   {source.snapshot && source.trang_thai !== 'khong-doc-duoc' && <p className="mt-2 line-clamp-3 break-words text-sm leading-6 text-slate-600">{source.snapshot.slice(0, 350)}</p>}
                   <div className="mt-3 flex flex-wrap items-center gap-2">
                     <button

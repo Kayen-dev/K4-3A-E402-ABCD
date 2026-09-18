@@ -14,18 +14,36 @@ async function blob() {
   if (!process.env.BLOB_READ_WRITE_TOKEN) throw Object.assign(new Error('Chưa cấu hình lưu trữ bền vững'), { status: 503, code: 'STORAGE_NOT_CONFIGURED' });
   return import('@vercel/blob');
 }
-function storageError(e) {
-  if (e?.name === 'BlobPreconditionFailedError' || e?.name === 'BlobAlreadyExistsError') return Object.assign(new Error('Phiên đã thay đổi. Tải lại rồi thử tiếp.'), { status: 409, code: 'STORAGE_CONFLICT' });
+export function storageError(e) {
+  const type = e?.constructor?.name || e?.name;
+  if (['BlobPreconditionFailedError', 'BlobAlreadyExistsError'].includes(type) || ['BlobPreconditionFailedError', 'BlobAlreadyExistsError'].includes(e?.name)) return Object.assign(new Error('Phiên đã thay đổi. Tải lại rồi thử tiếp.'), { status: 409, code: 'STORAGE_CONFLICT' });
   return e;
+}
+export function conditionalBlobOptions(value) {
+  const etag = etags.get(value);
+  return { access: 'private', contentType: 'application/json', addRandomSuffix: false,
+    ...(etag ? { allowOverwrite: true, ifMatch: etag } : {}) };
+}
+export async function readBlobJson(path, missingMessage, sdk) {
+  const { get, head } = sdk || await blob();
+  try {
+    // Use storage metadata for conditional writes, rather than a delivery ETag.
+    const before = await head(path);
+    const result = await get(path, { access: 'private', useCache: false });
+    if (!result || result.statusCode !== 200) throw Object.assign(new Error(missingMessage), { code: 'ENOENT' });
+    const value = JSON.parse(await new Response(result.stream).text());
+    const after = await head(path);
+    if (!before.etag || before.etag !== after.etag) throw Object.assign(new Error('Phiên đã thay đổi trong lúc đọc. Vui lòng tải lại.'), { status: 409, code: 'STORAGE_CONFLICT' });
+    etags.set(value, before.etag);
+    return value;
+  } catch (e) {
+    if (e?.constructor?.name === 'BlobNotFoundError') throw Object.assign(new Error(missingMessage), { code: 'ENOENT' });
+    throw storageError(e);
+  }
 }
 export async function readProject(id) {
   if (!blobMode()) return JSON.parse(await readFile(join(DIR, `${id}.json`), 'utf8'));
-  const { get } = await blob();
-  const result = await get(pathname(id), { access: 'private', useCache: false });
-  if (!result || result.statusCode !== 200) throw Object.assign(new Error('Không tìm thấy phiên'), { code: 'ENOENT' });
-  const project = JSON.parse(await new Response(result.stream).text());
-  etags.set(project, result.blob.etag);
-  return project;
+  return readBlobJson(pathname(id), 'Không tìm thấy phiên');
 }
 export async function writeProject(project) {
   if (!blobMode()) {
@@ -35,12 +53,8 @@ export async function writeProject(project) {
     await rename(temp, path); return;
   }
   const { put } = await blob();
-  const etag = etags.get(project);
   try {
-    const result = await put(pathname(project.id), JSON.stringify(project), {
-      access: 'private', contentType: 'application/json',
-      ...(etag ? { allowOverwrite: true, ifMatch: etag } : {}),
-    });
+    const result = await put(pathname(project.id), JSON.stringify(project), conditionalBlobOptions(project));
     etags.set(project, result.etag);
   } catch (e) { throw storageError(e); }
 }
@@ -66,12 +80,7 @@ export async function removeProject(id) {
 
 export async function readFeedback(id) {
   if (!blobMode()) return JSON.parse(await readFile(join(FEEDBACK_DIR, `${id}.json`), 'utf8'));
-  const { get } = await blob();
-  const result = await get(feedbackPath(id), { access: 'private', useCache: false });
-  if (!result || result.statusCode !== 200) throw Object.assign(new Error('Không tìm thấy góp ý'), { code: 'ENOENT' });
-  const feedback = JSON.parse(await new Response(result.stream).text());
-  etags.set(feedback, result.blob.etag);
-  return feedback;
+  return readBlobJson(feedbackPath(id), 'Không tìm thấy góp ý');
 }
 
 export async function writeFeedback(feedback) {
@@ -83,12 +92,8 @@ export async function writeFeedback(feedback) {
     await rename(temp, path); return;
   }
   const { put } = await blob();
-  const etag = etags.get(feedback);
   try {
-    const result = await put(feedbackPath(feedback.id), JSON.stringify(feedback), {
-      access: 'private', contentType: 'application/json',
-      ...(etag ? { allowOverwrite: true, ifMatch: etag } : {}),
-    });
+    const result = await put(feedbackPath(feedback.id), JSON.stringify(feedback), conditionalBlobOptions(feedback));
     etags.set(feedback, result.etag);
   } catch (e) { throw storageError(e); }
 }
