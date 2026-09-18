@@ -10,6 +10,7 @@ export type Source = {
   };
   trang_thai: string;
   ly_do?: string;
+  canh_bao?: string[];
   rationale?: string;
   trich_dan: string[];
   evidence?: { id: string; sourceId: string; snapshotHash?: string; quote: string; start: number; end: number }[];

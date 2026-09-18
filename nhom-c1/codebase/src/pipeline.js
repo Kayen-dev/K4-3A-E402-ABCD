@@ -172,21 +172,24 @@ export function gomFact(facts, nguonList) {
   return { facts: out, dangDung };
 }
 
-export async function kiemChungClaims(factsById) {
+export async function kiemChungClaims(factsById, { onLog, signal, timeoutMs } = {}) {
   const facts = Object.values(factsById);
   const candidates = facts.filter(f => f.trang_thai === 'da-xac-minh');
   const out = Object.fromEntries(facts.map(f => [f.id, { ...f, supportStatus: f.mau_thuan ? 'conflicting' : 'insufficient', supportReason: f.trang_thai }]));
   if (!candidates.length) return out;
   try {
     const prompt = p5_kiemChung({ claims: candidates.map(f => ({ id: f.id, statement: f.noi_dung, evidence: f.bang_chung.map(b => ({ sourceId: b.nguon_id, quote: b.doan_trich })) })) });
-    const ai = await askJson(prompt);
+    const ai = await askJson({ ...prompt, onLog, signal, timeoutMs, maxRetry: 0 });
     if (!Array.isArray(ai.verdicts)) return out;
     for (const verdict of ai.verdicts) {
       if (!out[verdict.id] || !['supported', 'conflicting', 'insufficient'].includes(verdict.status) || typeof verdict.reason !== 'string') continue;
       out[verdict.id].supportStatus = verdict.status;
       out[verdict.id].supportReason = verdict.reason.slice(0, 500);
     }
-  } catch { /* Keep insufficient; never upgrade after verifier failure. */ }
+  } catch {
+    onLog?.('w', 'Chưa hoàn tất kiểm chứng AI. Giữ bản nháp và đánh dấu thông tin chưa được xác minh.');
+    // Never upgrade a claim after verifier failure.
+  }
   return out;
 }
 
@@ -260,7 +263,7 @@ export async function soatVanNoi(cauList, factsById, dangDung, { boQuaAI = false
    VIẾT CÂU  (AI 3)  — chỉ nhận fact ĐÃ DUYỆT, không bao giờ nhận cach_ly
    ═══════════════════════════════════════════════════════════════════ */
 
-export async function vietCau({ chu_de, muc_tieu, nguoi_hoc, so_cau, nguonList, onLog }) {
+export async function vietCau({ chu_de, muc_tieu, nguoi_hoc, so_cau, nguonList, onLog, signal }) {
   // Chỉ nguồn được phép dùng. Nguồn thiếu tác giả chỉ vào context khi đã được
   // người dùng duyệt; nội dung có chỉ thị ẩn luôn ở ngoài prompt.
   const dungDuoc = nguonList
@@ -278,7 +281,7 @@ export async function vietCau({ chu_de, muc_tieu, nguoi_hoc, so_cau, nguonList, 
     }));
 
   const prompt = p3_vietCau({ chu_de, muc_tieu, nguoi_hoc, so_cau, facts: dungDuoc });
-  const ai = await askJson({ ...prompt, stubKey: "default", onLog });
+  const ai = await askJson({ ...prompt, stubKey: "default", onLog, signal });
 
   // Evidence must be an exact substring of the article supplied to the model.
   const trichTheoNguon = Object.fromEntries(dungDuoc.map(n => [n.nguon_id, n]));

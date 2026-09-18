@@ -65,10 +65,21 @@ export async function handleRequest(req, res) {
         const input = await body(req);
         if (['research', 'add-source', 'generate', 'rewrite', 'review'].includes(input.action)) {
           res.writeHead(200, { 'content-type': 'application/x-ndjson; charset=utf-8', 'cache-control': 'no-store', 'x-accel-buffering': 'no' });
-          const emit = event => { if (!res.destroyed) res.write(JSON.stringify(event) + '\n'); };
+          const emit = event => { if (!res.destroyed && !res.writableEnded) res.write(JSON.stringify(event) + '\n'); };
           emit({ type: 'started', message: 'Đang xử lý' });
-          try { emit({ type: 'result', project: await actionProject(id, input, emit) }); }
-          catch (e) { emit({ type: 'error', code: e.code || 'RUN_FAILED', message: e.status >= 500 ? 'Tác vụ thất bại. Thử lại hoặc liên hệ người quản trị.' : e.message }); }
+          emit({ type: 'progress', message: 'Đang tải phiên làm việc và kiểm tra dữ liệu lưu trữ.' });
+          let deadline;
+          try {
+            const project = await Promise.race([
+              actionProject(id, input, emit),
+              new Promise((_, reject) => { deadline = setTimeout(() => reject(Object.assign(new Error('Xử lý quá thời gian cho phép. Hãy thử lại hoặc chọn ít tài liệu hơn.'), { code: 'RUN_TIMEOUT' })), process.env.VERCEL ? 55_000 : 130_000); }),
+            ]);
+            emit({ type: 'result', project });
+          }
+          catch (e) {
+            console.error('[action]', input.action, id, e.code || e.name);
+            emit({ type: 'error', code: e.code || 'RUN_FAILED', message: e.code === 'RUN_TIMEOUT' ? e.message : e.status >= 500 ? 'Tác vụ thất bại. Thử lại hoặc liên hệ người quản trị.' : e.message });
+          } finally { clearTimeout(deadline); }
           return res.end();
         }
         return json(res, 200, await actionProject(id, input));

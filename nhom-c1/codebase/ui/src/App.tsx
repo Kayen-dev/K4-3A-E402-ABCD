@@ -881,28 +881,14 @@ function ResearchPanel({
                       </span>
                     </label>
                     <span
-                      className={`w-fit rounded-full border px-3 py-1 text-xs font-bold ${statusTone(source)}`}
+                      tabIndex={source.trang_thai === 'loai' ? 0 : undefined}
+                      title={source.trang_thai === 'loai' ? source.ly_do || 'Nguồn chưa đáp ứng tiêu chí đánh giá.' : undefined}
+                      className={`group relative w-fit rounded-full border px-3 py-1 text-xs font-bold ${statusTone(source)}`}
                     >
                       {statusLabel(source)}
+                      {source.trang_thai === 'loai' && <span role="tooltip" className="pointer-events-none absolute right-0 top-full z-20 mt-2 hidden w-72 max-w-[80vw] rounded-xl bg-slate-900 p-3 text-left text-xs font-normal leading-5 text-white shadow-lg group-hover:block group-focus:block">{source.ly_do || 'Nguồn chưa đáp ứng tiêu chí đánh giá. Mở Xem đoạn đã đọc để kiểm tra.'}</span>}
                     </span>
                   </div>
-                  <p className="mt-3 break-words text-sm leading-6 text-slate-600">
-                    {source.ly_do || "Chưa có ghi chú đánh giá nguồn."}
-                  </p>
-                  {source.trang_thai === 'loai' && isUsable && <p className="mt-2 text-sm text-amber-800">Bạn vẫn có thể chọn tài liệu này sau khi tự kiểm tra tác giả hoặc đơn vị xuất bản. Thiếu thông tin tác giả không đồng nghĩa bài viết sai.</p>}
-                  <details className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm">
-                    <summary className="cursor-pointer font-semibold text-slate-700">Vì sao nguồn được đánh giá như vậy? Xem 5 tiêu chí</summary>
-                    <ol className="mt-3 list-decimal space-y-2 pl-5 text-slate-600">
-                      {[
-                        ['Tác giả hoặc đơn vị xuất bản', 'Có tên người viết hoặc tổ chức đứng sau nội dung để đối chiếu độ tin cậy. Hệ thống chưa tìm thấy không có nghĩa thông tin này không tồn tại.'],
-                        ['Độ cập nhật', 'Kiểm tra ngày đăng theo quy tắc thời hạn của hệ thống; nếu thiếu ngày, cần tự kiểm tra.'],
-                        ['Tài liệu gốc được dẫn lại', 'Bài viết có dẫn nghiên cứu, số liệu hoặc tài liệu gốc để kiểm tra tiếp hay không.'],
-                        ['Đúng chủ đề và đối tượng', 'Ví dụ dinh dưỡng lá cây cần tài liệu về thực vật, không chỉ trùng từ dinh dưỡng.'],
-                        ['Không có chỉ thị nhắm vào AI', 'Không dùng nội dung có chỉ thị yêu cầu hệ thống bỏ qua quy tắc hoặc thao túng kết quả.'],
-                      ].map(([title, description], criterion) => <li key={title}><strong>{title}</strong> · {source.diem_tieu_chi ? (source.diem_tieu_chi[criterion] === 1 ? 'Đạt' : 'Chưa đạt / cần kiểm tra') : 'Chưa đánh giá'}<p className="mt-1">{description}</p></li>)}
-                    </ol>
-                    {source.rationale && <p className="mt-3 break-words"><strong>Nhận xét nội dung:</strong> {source.rationale}</p>}
-                  </details>
                   {source.snapshot && source.trang_thai !== 'khong-doc-duoc' && <p className="mt-2 line-clamp-3 break-words text-sm leading-6 text-slate-600">{source.snapshot.slice(0, 350)}</p>}
                   <div className="mt-3 flex flex-wrap items-center gap-2">
                     <button
@@ -951,6 +937,9 @@ function ResearchPanel({
             </div>
             <p className="mt-2 text-xs leading-5 text-slate-600">{writingPhase === 'generating' && message ? message : 'Đang chuẩn bị nội dung từ các tài liệu bạn đã chọn.'}</p>
             <p className="mt-2 text-xs leading-5 text-slate-600">Kịch bản sẽ tự mở khi hoàn tất.</p>
+            <ol aria-label="Nhật ký viết kịch bản" className="mt-3 max-h-56 space-y-2 overflow-y-auto border-t border-indigo-200 pt-3 text-xs leading-5 text-slate-700">
+              {progressLog.map((entry, index) => <li key={`${index}-${entry}`}>{entry}</li>)}
+            </ol>
           </div> : <button
             className={`${primary} mt-5 w-full`}
             disabled={busy || checkedUsable === 0}
@@ -1133,6 +1122,7 @@ function TeacherApp({ user, onLogout }: { user: User; onLogout: () => void }) {
     if (!baseProject || busy) return null;
     setBusy(true);
     setBusyKind(kind || (action as BusyKind));
+    setProgressLog([]);
     setError("");
     onProgress(action === "generate" ? "Đang chuẩn bị nguồn đã chọn..." : "Đang xử lý...");
     try {
@@ -1543,6 +1533,20 @@ function TeacherApp({ user, onLogout }: { user: User; onLogout: () => void }) {
             <p className="mt-2 text-sm text-slate-600">{source.meta?.tac_gia || source.meta?.to_chuc || "Không rõ tác giả"} · {source.meta?.ngay_dang || "Không rõ ngày"}</p>
             <a className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-indigo-700 underline" href={source.url} target="_blank" rel="noopener noreferrer">Mở trang gốc <ExternalLink className="size-4" /></a>
             <p className="mt-4 rounded-2xl bg-slate-50 p-3 text-sm leading-6 text-slate-600">{source.ly_do}</p>
+            {!!source.canh_bao?.length && <ul className="mt-3 space-y-2 text-sm text-amber-800">{source.canh_bao.map((warning, index) => <li key={index}>{warning}</li>)}</ul>}
+                  <details className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm">
+                    <summary className="cursor-pointer font-semibold text-slate-700">Vì sao nguồn được đánh giá như vậy? Xem 5 tiêu chí</summary>
+                    <ol className="mt-3 list-decimal space-y-2 pl-5 text-slate-600">
+                      {[
+                        ['Tác giả hoặc đơn vị xuất bản', 'Có tên người viết hoặc tổ chức đứng sau nội dung để đối chiếu độ tin cậy. Hệ thống chưa tìm thấy không có nghĩa thông tin này không tồn tại.'],
+                        ['Độ cập nhật', 'Kiểm tra ngày đăng theo quy tắc thời hạn của hệ thống; nếu thiếu ngày, cần tự kiểm tra.'],
+                        ['Tài liệu gốc được dẫn lại', 'Bài viết có dẫn nghiên cứu, số liệu hoặc tài liệu gốc để kiểm tra tiếp hay không.'],
+                        ['Đúng chủ đề và đối tượng', 'Ví dụ dinh dưỡng lá cây cần tài liệu về thực vật, không chỉ trùng từ dinh dưỡng.'],
+                        ['Không có chỉ thị nhắm vào AI', 'Không dùng nội dung có chỉ thị yêu cầu hệ thống bỏ qua quy tắc hoặc thao túng kết quả.'],
+                      ].map(([title, description], criterion) => <li key={title}><strong>{title}</strong> · {source.diem_tieu_chi ? (source.diem_tieu_chi[criterion] === 1 ? 'Đạt' : 'Chưa đạt / cần kiểm tra') : 'Chưa đánh giá'}<p className="mt-1">{description}</p></li>)}
+                    </ol>
+                    {source.rationale && <p className="mt-3 break-words"><strong>Nhận xét nội dung:</strong> {source.rationale}</p>}
+                  </details>
             <h3 className="mt-5 font-bold text-slate-950">Đoạn làm căn cứ</h3>
             {source.trich_dan?.length ? (
               [...source.trich_dan].sort((a, b) => a === focusQuote ? -1 : b === focusQuote ? 1 : 0).map((quote, index) => (

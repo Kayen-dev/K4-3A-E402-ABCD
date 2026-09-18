@@ -153,11 +153,21 @@ function baoDamCoChuJson(system) {
 }
 
 /** fetch có timeout — timeout cũng đọc từ env, không hardcode. */
-async function goi(url, opts, timeout_ms) {
+async function goi(url, opts, timeout_ms, signal) {
   const ctrl = new AbortController();
+  const abort = () => ctrl.abort(signal.reason);
+  if (signal?.aborted) abort();
+  else signal?.addEventListener('abort', abort, { once: true });
   const t = setTimeout(() => ctrl.abort(), timeout_ms);
-  try { return await fetch(url, { ...opts, signal: ctrl.signal }); }
-  finally { clearTimeout(t); }
+  try {
+    const response = await fetch(url, { ...opts, signal: ctrl.signal });
+    // Keep the deadline active until the provider finishes sending its JSON.
+    const text = await response.text();
+    return new Response(text, { status: response.status, headers: response.headers });
+  } finally {
+    clearTimeout(t);
+    signal?.removeEventListener('abort', abort);
+  }
 }
 
 let traceCount = 0;
@@ -205,7 +215,7 @@ async function callGemini({ system, user, c }) {
         responseMimeType: "application/json",
       },
     }),
-  }, c.timeout_ms);
+  }, c.timeout_ms, c.signal);
   if (!res.ok) {
     const t = (await res.text()).slice(0, 500);
     // Google ngừng model cũ khá thường xuyên và nói luôn tên model thay thế
@@ -242,7 +252,7 @@ async function callAnthropic({ system, user, c }) {
       system,
       messages: [{ role: "user", content: user }],
     }),
-  }, c.timeout_ms);
+  }, c.timeout_ms, c.signal);
   if (!res.ok) {
     const t = (await res.text()).slice(0, 300);
     if (res.status === 429 || res.status === 529) throw new LoiHanMuc(`Anthropic ${res.status}: ${loiGonGang(t)}`, choBaoLau(t, res.headers));
@@ -280,7 +290,7 @@ async function callOpenAI({ system, user, c, qua_openrouter = false }) {
         { role: "user", content: user },
       ],
     }),
-  }, c.timeout_ms);
+  }, c.timeout_ms, c.signal);
   if (!res.ok) {
     const t = (await res.text()).slice(0, 1200);
     const vi = loiGonGang(t);
@@ -331,8 +341,11 @@ async function callStub({ name, stubKey }) {
  * @param {string} user     user prompt
  * @param {string} stubKey  khoá tra trong fixtures khi chạy provider=stub
  */
-export async function askJson({ name, system, user, stubKey, onLog }) {
+export async function askJson({ name, system, user, stubKey, onLog, signal, timeoutMs, maxRetry }) {
   const c = cauHinh();
+  c.signal = signal;
+  if (timeoutMs !== undefined) c.timeout_ms = Math.min(c.timeout_ms, timeoutMs);
+  if (maxRetry !== undefined) c.max_retry = maxRetry;
   const { provider } = c;
   const t0 = Date.now();
 
@@ -359,6 +372,7 @@ export async function askJson({ name, system, user, stubKey, onLog }) {
 
   let raw, error = null, soLanThu = 0, nhacJson = false, soLanNhacJson = 0, loiVinhVien = false;
   for (let lan = 0; ; lan++) {
+    signal?.throwIfAborted();
     // Xếp hàng + giãn cách. Chế độ stub không đi mạng nên không cần chờ.
     const moKhoa = provider === "stub" ? null : await xepHang(c.min_gap_ms);
     const releaseCall = provider === "stub" ? null : await acquireCall();
@@ -368,6 +382,7 @@ export async function askJson({ name, system, user, stubKey, onLog }) {
       error = null;
     } catch (e) {
       error = e.message;
+      if (signal?.aborted) throw signal.reason;
       loiVinhVien = !!e.vinhVien;
       // 429 là hết hạn mức, KHÔNG phải lỗi logic — chờ đúng số giây API bảo rồi thử lại.
       if (e.hanMuc && lan < c.max_retry) {

@@ -195,6 +195,18 @@ async function longAction(id, body, emit) {
   } catch (e) { runs.delete(id); throw e; }
   let sequence = 0;
   const progress = e => emit({ runId, sequence: ++sequence, ...e });
+  const onLog = (_level, message) => progress({ type: 'progress', message });
+  const timeout = fault(504, 'RUN_TIMEOUT', 'Xử lý quá thời gian cho phép. Hãy chọn ít tài liệu hơn hoặc thử lại.');
+  const deadline = setTimeout(() => controller.abort(timeout), process.env.VERCEL ? 50_000 : 120_000);
+  const beganAt = Date.now();
+  let stage = 'Đang chuẩn bị dữ liệu';
+  const report = message => {
+    stage = message;
+    console.log('[action-stage]', body.action, runId, Date.now() - beganAt, message);
+    progress({ type: 'progress', message });
+  };
+  const heartbeat = setInterval(() => progress({ type: 'progress', message: `${stage} · đã chạy ${Math.round((Date.now() - beganAt) / 1000)} giây` }), 8_000);
+  report('Đã mở phiên xử lý. Đang chuẩn bị dữ liệu.');
   try {
     let result;
     const researchQueries = [];
@@ -219,10 +231,19 @@ async function longAction(id, body, emit) {
       if (start.sourceApprovalRevision > start.revision) throw fault(409, 'REVISION_CONFLICT', 'Tài liệu đã thay đổi');
       if ((process.env.LLM_PROVIDER || 'stub') === 'stub' || !process.env.LLM_API_KEY) throw fault(503, 'LLM_NOT_CONFIGURED', 'Chưa cấu hình viết kịch bản. Liên hệ người quản trị.');
       const count = Math.min(40, Math.max(3, Math.round(start.brief.duration * 5)));
-      result = await vietCau({ chu_de: start.brief.topic, muc_tieu: start.brief.goal, nguoi_hoc: start.brief.audience, so_cau: count, nguonList: eligible(start) });
+      report(`Bước 1/4: Đang tổng hợp nội dung ${eligible(start).length} tài liệu đã chọn.`);
+      report(`Bước 2/4: AI đang viết bản nháp ${count} câu từ nội dung tài liệu.`);
+      result = await vietCau({ chu_de: start.brief.topic, muc_tieu: start.brief.goal, nguoi_hoc: start.brief.audience, so_cau: count, nguonList: eligible(start), onLog, signal: controller.signal });
       if (!Array.isArray(result.cau) || !result.cau.length || result.cau.length > 40 || result.cau.some(c => typeof c.loi !== 'string' || !c.loi.trim() || c.loi.length > 2000)) throw fault(502, 'INVALID_DRAFT', 'Kết quả viết chưa hợp lệ. Thử lại sau.');
       if (body.action === 'rewrite' && start.sentences.some((s, i) => s.needsRewrite && i >= result.cau.length)) throw fault(502, 'INCOMPLETE_REWRITE', 'Chưa viết đủ câu bị ảnh hưởng. Thử lại sau.');
-      result.verifiedFacts = await kiemChungClaims(gomFact(result.facts, eligible(start)).facts);
+      report('Bước 3/4: Đã có bản nháp. Đang đối chiếu thông tin với đoạn trích nguồn.');
+      const verificationBudget = process.env.VERCEL ? Math.min(10_000, 45_000 - (Date.now() - beganAt)) : 30_000;
+      const draftFacts = gomFact(result.facts, eligible(start)).facts;
+      result.verifiedFacts = await kiemChungClaims(draftFacts, {
+        onLog, signal: controller.signal, timeoutMs: Math.max(1, verificationBudget),
+      });
+      controller.signal.throwIfAborted();
+      report('Bước 4/4: Đang lưu kịch bản và liên kết nguồn tham khảo.');
     } else if (body.action === 'review') {
       if (!start.sentences.length) throw fault(400, 'NO_SCRIPT', 'Chưa có kịch bản để rà soát');
       const cau = start.sentences.map((s, i) => ({ n: i + 1, loi: s.text, fact_ids: s.claimIds }));
@@ -277,5 +298,5 @@ async function longAction(id, body, emit) {
   } catch (e) {
     await locked(id, async () => { const p = await getProject(id); if (p.run?.id === runId) { p.run.status = controller.signal.aborted ? 'cancelled' : 'error'; p.run.message = e.message; await save(p); } });
     throw e;
-  } finally { runs.delete(id); }
+  } finally { clearTimeout(deadline); clearInterval(heartbeat); runs.delete(id); }
 }

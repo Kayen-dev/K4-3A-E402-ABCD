@@ -138,7 +138,11 @@ test('generation uses article content, saves new evidence and media per scene, r
     project.sources = ['s1', 's2'].map((id, i) => ({ nguon_id: id, url: `${base}/${i}`, trang_thai: 'dung', snapshot: paragraph.repeat(3), snapshot_hash: 'test-hash', trich_dan: [], evidence: [], approved: true, media: [{ kind: 'image', url: `${base}/ai.jpg` }] }));
     project.sourceApprovalRevision = 1;
     await writeProject(project);
-    const result = await actionProject(project.id, { action: 'generate', revision: project.revision });
+    const events = [];
+    const result = await actionProject(project.id, { action: 'generate', revision: project.revision }, event => events.push(event));
+    for (let step = 1; step <= 4; step++) {
+      assert.ok(events.some(event => event.type === 'progress' && event.message.startsWith(`Bước ${step}/4:`)));
+    }
     assert.deepEqual(result.sentences[0].sourceIds, ['s1', 's2']);
     assert.equal(result.sentences[0].evidenceIds.length, 2);
     assert.equal(result.sentences[0].media.url, `${base}/ai.jpg`);
