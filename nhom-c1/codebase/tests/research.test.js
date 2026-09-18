@@ -135,11 +135,12 @@ test('generation uses article content, saves new evidence and media per scene, r
   });
   try {
     const project = await createProject({ mode: 'research', brief: { topic: 'AI', goal: 'Hiểu AI', audience: 'Sinh viên', duration: 1 } });
-    project.sources = ['s1', 's2'].map((id, i) => ({ nguon_id: id, url: `${base}/${i}`, trang_thai: 'dung', snapshot: paragraph.repeat(3), snapshot_hash: 'test-hash', trich_dan: [], evidence: [], approved: true, media: [{ kind: 'image', url: `${base}/ai.jpg` }] }));
-    project.sourceApprovalRevision = 1;
+    project.sources = ['s1', 's2'].map((id, i) => ({ nguon_id: id, url: `${base}/${i}`, trang_thai: i === 0 ? 'loai' : 'dung', diem_tieu_chi: [1, 1, 0, 0, 1], snapshot: paragraph.repeat(3), snapshot_hash: 'test-hash', trich_dan: [], evidence: [], approved: false, media: [{ kind: 'image', url: `${base}/ai.jpg` }] }));
     await writeProject(project);
+    const approved = await actionProject(project.id, { action: 'approve-sources', sourceIds: ['s1', 's2'], revision: project.revision });
+    assert.equal(approved.sources[0].approved, true, 'teacher can approve a source rejected for relevance');
     const events = [];
-    const result = await actionProject(project.id, { action: 'generate', revision: project.revision }, event => events.push(event));
+    const result = await actionProject(project.id, { action: 'generate', revision: approved.revision }, event => events.push(event));
     for (let step = 1; step <= 4; step++) {
       assert.ok(events.some(event => event.type === 'progress' && event.message.startsWith(`Bước ${step}/4:`)));
     }

@@ -80,9 +80,7 @@ const categoryLabel: Record<string, string> = {
 
 function canUseSource(source: Source) {
   if (["dung", "dung-canh-bao"].includes(source.trang_thai)) return true;
-  const scores = source.diem_tieu_chi;
-  return source.trang_thai === "loai" && scores?.[0] === 0 &&
-    scores[3] === 1 && scores[4] === 1 && !!source.snapshot &&
+  return source.trang_thai === "loai" && source.diem_tieu_chi?.[4] !== 0 && !!source.snapshot?.trim() &&
     !source.cach_ly?.length;
 }
 
@@ -106,7 +104,6 @@ function statusLabel(source: Source) {
     return "Có thể dùng";
   }
   if (source.trang_thai === "khong-doc-duoc") return "Không đọc được";
-  if (canUseSource(source)) return "Cần tự kiểm tra";
   if (source.trang_thai === "loai") return "Không nên dùng";
   return "Chưa đánh giá được";
 }
@@ -115,7 +112,6 @@ function statusTone(source: Source) {
   if (source.trang_thai === "dung" || source.trang_thai === "dung-canh-bao") {
     return "border-emerald-200 bg-emerald-50 text-emerald-800";
   }
-  if (canUseSource(source)) return "border-amber-200 bg-amber-50 text-amber-800";
   if (source.trang_thai === "khong-doc-duoc" || source.trang_thai === "loai") {
     return "border-rose-200 bg-rose-50 text-rose-800";
   }
