@@ -23,6 +23,9 @@ export async function assertSuitableLesson(brief, { classify = askJson, config =
   try {
     result = await classify({
       name: 'lesson-content-check',
+      maxTokens: 128,
+      timeoutMs: 15000,
+      maxRetry: 0,
       system: [
         'Bạn phân loại đầu vào cho ứng dụng tìm tài liệu bài học.',
         'Trả JSON {"allowed":true} hoặc {"allowed":false}.',
@@ -34,8 +37,18 @@ export async function assertSuitableLesson(brief, { classify = askJson, config =
       user: JSON.stringify({ topic: brief.topic, goal: brief.goal, audience: brief.audience }),
     });
     if (typeof result?.allowed !== 'boolean') throw new Error('Invalid content classification');
-  } catch {
-    throw Object.assign(new Error('Chưa thể kiểm tra mức độ phù hợp của nội dung. Vui lòng thử lại sau.'), { status: 503, code: 'CONTENT_CHECK_UNAVAILABLE' });
+  } catch (error) {
+    const text = String(error?.message || '');
+    const kind = /\b(401|403)\b|invalid.*key|key.*invalid|authentication/i.test(text) ? 'credentials' :
+      /\b429\b|quota|credit|billing/i.test(text) ? 'quota' :
+      /abort|timeout|deadline/i.test(text) ? 'timeout' : 'provider-or-response';
+    // Do not log user input, provider response bodies or API keys.
+    console.error('[content-check]', JSON.stringify({ kind, provider: config.provider, model: config.model, code: error?.code }));
+    const message = kind === 'credentials' ? 'Dịch vụ AI chưa xác thực được. Người quản trị cần kiểm tra API key trong cấu hình Production.' :
+      kind === 'quota' ? 'Dịch vụ AI đã hết hạn mức hoặc bị giới hạn lượt gọi. Vui lòng thử lại sau hoặc liên hệ người quản trị.' :
+      kind === 'timeout' ? 'Kiểm tra nội dung mất quá nhiều thời gian. Vui lòng thử lại.' :
+      'Chưa thể kiểm tra mức độ phù hợp của nội dung. Vui lòng thử lại sau.';
+    throw Object.assign(new Error(message), { status: 503, code: 'CONTENT_CHECK_UNAVAILABLE' });
   }
   if (!result.allowed) throw Object.assign(new Error(refusal), { status: 400, code: 'INAPPROPRIATE_CONTENT' });
 }

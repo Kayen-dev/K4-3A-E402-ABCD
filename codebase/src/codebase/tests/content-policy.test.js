@@ -36,3 +36,14 @@ test('allows sensitive educational topics after contextual classification', asyn
     config: { provider: 'configured', key: 'test' }, classify: async () => ({ allowed: true }),
   });
 });
+
+test('invalid API credentials produce an actionable message without leaking provider details', async () => {
+  await assert.rejects(assertSuitableLesson({ topic: 'Toán học' }, {
+    config: { provider: 'openai', key: 'test' },
+    classify: async prompt => {
+      assert.equal(prompt.maxTokens, 128);
+      assert.equal(prompt.maxRetry, 0);
+      throw new Error('OpenAI 401: Your API key has been invalidated. secret-provider-body');
+    },
+  }), e => e.code === 'CONTENT_CHECK_UNAVAILABLE' && e.message.includes('API key') && !e.message.includes('secret-provider-body'));
+});

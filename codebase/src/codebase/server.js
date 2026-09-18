@@ -106,7 +106,7 @@ export async function handleRequest(req, res) {
   } catch (e) {
     const status = e.status || (e.code === 'ENOENT' ? 404 : 500);
     if (status >= 500) console.error(e);
-    if (!res.headersSent) json(res, status, { code: e.code || 'SERVER_ERROR', message: status >= 500 ? 'Có lỗi máy chủ. Thử lại sau.' : e.message });
+    if (!res.headersSent) json(res, status, { code: e.code || 'SERVER_ERROR', message: status >= 500 && e.code !== 'CONTENT_CHECK_UNAVAILABLE' ? 'Có lỗi máy chủ. Thử lại sau.' : e.message });
     else res.end();
   }
 }
