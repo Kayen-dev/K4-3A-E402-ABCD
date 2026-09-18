@@ -1,207 +1,130 @@
-# ScriptScout — Thuyết trình dưới góc nhìn BA và AI Engineer
+# ScriptScout — Thuyết trình sản phẩm và kiến trúc AI
 
-Kịch bản trình bày: từ nhu cầu nghiệp vụ đến thiết kế và vận hành hệ thống AI.
-Phần BA giải thích người dùng cần gì và sản phẩm giải quyết bằng quy trình nào.
-Phần AI Engineer giải thích dữ liệu, công cụ, agent và cơ chế kiểm soát chất lượng.
-Các phần RAG, chỉ số đánh giá và kiến trúc mở rộng là đề xuất, chưa phải toàn bộ tính năng đã triển khai.
+## Phần 1. Bài thuyết trình khoảng 4 phút
 
-## 01 BA — Business problem và pain points
+Người trình bày kết hợp góc nhìn Business Analyst và AI Engineer.
+Các mốc thời gian là gợi ý; nên đọc thử với đồng hồ để điều chỉnh tốc độ.
+Phần hỏi đáp phía sau không tính vào thời lượng thuyết trình.
 
-Kính chào thầy cô và các bạn, nhóm chúng em xin giới thiệu ScriptScout.
-Để chuẩn bị một bài giảng, giảng viên thường phải tìm tài liệu, đọc, chọn lọc và viết lời giảng.
-Khi sử dụng AI, bản nháp có thể được tạo nhanh hơn, nhưng việc kiểm tra thông tin vẫn mất nhiều thời gian.
-Giảng viên cần biết một câu được viết từ tài liệu nào và tài liệu đó có thật sự hỗ trợ câu này hay không.
-Đồng thời, một nội dung đúng về kiến thức vẫn có thể khó hiểu đối với người học.
-Từ pain points này, nhóm xác định hai business needs: kiểm soát căn cứ và cải thiện cách truyền đạt.
-ScriptScout tổ chức hai nhu cầu này thành một quy trình có thể theo dõi và phê duyệt.
+### 0:00–0:40 — Bài toán và giá trị sản phẩm
 
-## 02 BA — Stakeholders, personas và responsibility matrix
+Kính chào thầy cô và các bạn, nhóm chúng em xin giới thiệu ScriptScout, ứng dụng hỗ trợ xây dựng và rà soát kịch bản bài giảng.
 
-Hai nhóm end users chính là giảng viên và học sinh hoặc sinh viên, tương ứng hai user personas của sản phẩm.
-Giảng viên tạo bài học, chọn tài liệu, biên tập kịch bản và quyết định bản cuối.
-Sinh viên gửi góp ý về những chỗ khó hiểu, thiếu giải thích hoặc chưa phù hợp với trải nghiệm học tập.
-Giảng viên duyệt góp ý trước khi hệ thống đưa vào lần rà soát tiếp theo.
-Trong responsibility matrix, giảng viên chịu trách nhiệm phê duyệt chuyên môn và sinh viên cung cấp learning feedback.
-AI hỗ trợ tìm vấn đề và đề xuất phương án sửa, còn người dùng quyết định áp dụng.
-Đây là cơ sở để chúng em thiết kế mô hình human in the loop cho toàn bộ quy trình.
+Từ góc nhìn BA, pain point chính là giảng viên phải tốn công tìm tài liệu, kiểm tra thông tin và chuyển kiến thức thành lời giảng dễ hiểu. Khi dùng AI, bản nháp có thể nhanh hơn nhưng người dùng vẫn khó biết từng câu dựa vào đâu.
 
-## 03 BA — Value proposition, MVP scope và use cases
+Vì vậy, value proposition của ScriptScout là hỗ trợ biên tập có căn cứ và có khả năng truy vết. Giảng viên kiểm soát bản cuối, còn phản hồi của sinh viên giúp phát hiện những phần khó hiểu trong trải nghiệm học tập.
 
-Value proposition của MVP là giảm công sức biên tập và tăng traceability từ lời đọc đến nguồn căn cứ.
-Luồng thứ nhất dành cho giảng viên chưa có kịch bản và cần research từ đầu.
-Luồng thứ hai dành cho giảng viên đã có lời đọc và muốn nhận góp ý theo từng câu.
-Luồng sinh viên bổ sung phản hồi để bài giảng cải thiện qua những lần biên tập.
-Đầu ra gồm lời đọc, thông tin nguồn và hồ sơ thao tác khi cần đối chiếu.
-Tạo video hoàn chỉnh thuộc future scope, sau khi các core use cases về kịch bản được kiểm soát chất lượng.
-Chúng em ưu tiên hoàn thiện chuỗi dữ liệu từ yêu cầu bài học đến câu đã được giảng viên duyệt.
+### 0:40–1:20 — Use cases và luồng người dùng
 
-## 04 BA — Requirement elicitation và business rules
+MVP có hai use cases chính: tạo kịch bản từ bài học và rà soát kịch bản có sẵn.
 
-Thông qua requirement elicitation, nhóm xác định lesson brief gồm chủ đề, learning outcomes, learner profile và thời lượng.
-Chủ đề là phạm vi kiến thức chính mà bài giảng phải bám theo.
-Mục tiêu mô tả người học cần hiểu hoặc thực hiện được điều gì sau bài học.
-Đối tượng người học giúp xác định độ khó và cách giải thích phù hợp.
-Ví dụ, cùng chủ đề trí tuệ nhân tạo, mục tiêu nhận diện ứng dụng sẽ khác mục tiêu giải thích thuật toán.
-Business rule trọng tâm là topic giữ vai trò chính, còn learning outcomes bổ sung context cho các truy vấn mở rộng.
-Quy tắc này giúp kết quả tìm kiếm phục vụ đúng bài học mà giảng viên đang chuẩn bị.
+Ở luồng tạo mới, giảng viên nhập chủ đề, mục tiêu học xong, người học và thời lượng. Chủ đề xác định phạm vi chính; mục tiêu bổ sung context cho research. Hệ thống tìm và đọc tài liệu, sau đó giảng viên chọn nguồn để viết kịch bản.
 
-## 05 BA — End to end workflow của use case tạo kịch bản
+Ở luồng rà soát, giảng viên dán nội dung hoặc import Markdown, xem góp ý theo từng câu và quyết định chấp nhận hay giữ nguyên. Khi chấp nhận, hệ thống thay đoạn được đánh dấu và kiểm tra vị trí để tránh ghi đè các chỉnh sửa khác.
 
-Happy path bắt đầu khi giảng viên nhập lesson brief, hệ thống validate dữ liệu rồi thực hiện research.
-Kết quả được trình bày thành danh sách nguồn kèm trạng thái và nội dung đã đọc được.
-Giảng viên có thể xem đoạn căn cứ trước khi quyết định chọn nguồn.
-Khi bấm Viết kịch bản, các nguồn được chọn trở thành dữ liệu đầu vào cho agent viết.
-Kịch bản được chia thành câu hoặc cảnh để dễ biên tập và đối chiếu.
-Giảng viên chạy rà soát, xử lý góp ý và hoàn tất các kiểm tra cần thiết trước khi duyệt.
-Sau đó người dùng tải lời đọc cuối hoặc bản có ngữ cảnh và hồ sơ nguồn.
+Sinh viên gửi feedback; giảng viên approve hoặc reject. Chỉ feedback được approve mới được đưa vào lần review tiếp theo.
 
-## 06 BA — Review workflow, alternate flow và approval gate
+### 1:20–2:20 — Web research và agent orchestration
 
-Use case Review Script có hai entry points: dán lời đọc hoặc import file Markdown.
-Hệ thống tách lời đọc và ngữ cảnh, chạy kiểm tra rồi chuyển đến bước kịch bản.
-Mỗi góp ý hiển thị vấn đề, lý do và nội dung thay thế khi agent cung cấp được.
-Giảng viên có thể chỉnh đề xuất hoặc nhập bản sửa thủ công rồi chấp nhận.
-Alternate flow cho phép người dùng giữ nguyên câu khi nhận xét chưa phù hợp hoặc sửa thủ công khi chưa có đề xuất.
-Approval gate của phiên rà soát cho phép Done khi các góp ý đã được xử lý và phiên đáp ứng điều kiện chốt.
-Chốt ở luồng này là xác nhận biên tập; mức độ kiểm chứng thông tin cần được hiểu theo bằng chứng thực tế.
+Về kỹ thuật, frontend dùng React và TypeScript; backend Node.js điều phối pipeline bằng code.
 
-## 07 BA — Feedback lifecycle và continuous improvement
+Chúng em áp dụng task decomposition: chia các bước đánh giá nguồn, writing, verification và review thành những nhiệm vụ có prompt và dữ liệu đầu vào riêng. Đây là orchestration có thứ tự kiểm soát được.
 
-Sinh viên nhập tiêu đề và nội dung góp ý, sau đó gửi để giảng viên xem xét.
-Một ví dụ là: phần giải thích thuật ngữ xuất hiện quá muộn nên người học khó theo dõi.
-Feedback lifecycle gồm pending, approved và rejected; business rule chỉ cho phép sử dụng feedback đã approved.
-Nếu sinh viên sửa góp ý, trạng thái trở về chờ duyệt để giảng viên kiểm tra lại.
-Feedback đã duyệt giúp agent review chú ý đến vấn đề người học từng gặp.
-Về nghiệp vụ, feedback loop hỗ trợ continuous improvement bằng cách đưa learning experience trở lại quy trình biên tập.
-Trong bản hiện tại, feedback dùng chung; gắn riêng theo bài học và lớp là yêu cầu mở rộng cần ưu tiên.
+Web research dùng query expansion từ chủ đề và mục tiêu, gọi Tavily Search rồi loại URL trùng. Backend dùng HTTP fetch và Cheerio để trích nội dung bài viết, bỏ menu và thành phần phụ. Tavily Extract là phương án bổ sung khi đọc trực tiếp thất bại.
 
-## 08 BA — Acceptance criteria, UAT và success metrics đề xuất
+Nội dung được lưu thành snapshot kèm metadata và hash để truy vết. Hệ thống cũng thu URL ảnh hoặc video nếu có; điều này chưa đồng nghĩa đã hiểu nội dung video.
 
-Acceptance criteria cho research là truy vấn bám chủ đề và sử dụng mục tiêu làm ngữ cảnh bổ sung.
-Với writing, yêu cầu là dùng nội dung nguồn đã chọn và không gán bằng chứng ngoài dữ liệu được cấp.
-Với review, góp ý phải chỉ ra câu liên quan và có thể được xử lý bằng thao tác rõ ràng.
-Với chốt bản, chỉnh sửa sau phê duyệt phải làm mất hiệu lực phê duyệt phiên bản cũ.
-Chúng em đề xuất đo thời gian từ nhập bài học đến bản cuối và tỷ lệ nguồn đọc được.
-Chất lượng AI có thể đo bằng tỷ lệ claim có căn cứ và tỷ lệ đề xuất sửa được giảng viên chấp nhận.
-Các success metrics và kịch bản UAT này là đề xuất; cần baseline và dữ liệu pilot để xác định target thực tế.
+Trước khi writing, context engineering chọn các đoạn liên quan trong tài liệu đã chọn theo ngân sách đầu vào. Agent tạo fact và lời đọc, đồng thời liên kết câu với fact, đoạn trích và URL nguồn. Đây là cơ chế grounding: cung cấp căn cứ cụ thể cho generation.
 
-## 09 AI Engineer — Application architecture và model abstraction layer
+### 2:20–3:15 — Kiểm chứng, review và feedback
 
-Từ các yêu cầu nghiệp vụ, chúng em xây dựng frontend React với TypeScript và Vite.
-Tailwind CSS hỗ trợ bố cục và trạng thái tương tác trong các bước làm việc.
-Backend Node.js tiếp nhận request, quản lý phiên và điều phối pipeline xử lý.
-Tavily hỗ trợ tìm kiếm web và trích xuất bổ sung khi cần.
-HTTP fetch cùng Cheerio hỗ trợ tải và phân tích nội dung HTML công khai.
-LLM adapter đóng vai trò model abstraction layer, tập trung provider configuration, inference endpoint và rate limiting.
-Việc tách các lớp giúp chúng em thay đổi công cụ mà vẫn giữ quy trình nghiệp vụ nhất quán.
+Backend kiểm tra đoạn trích có tồn tại trong context đã cấp bằng exact substring matching. Bước này loại trích dẫn bịa, nhưng chưa chứng minh câu viết đúng về nghĩa.
 
-## 10 AI Engineer — Agent orchestration và task decomposition
+Vì vậy, claim verification tiếp tục đánh giá mức hỗ trợ hoặc mâu thuẫn giữa claim và evidence. Khi thiếu bằng chứng, hệ thống giữ trạng thái cần kiểm chứng.
 
-Chúng em áp dụng task decomposition, chia agent thành các vai trò với input contract và output contract cụ thể.
-Research thu thập nguồn; đánh giá nguồn xác định khả năng sử dụng và cảnh báo.
-Writing tạo fact và lời đọc; verification đánh giá bằng chứng hỗ trợ fact.
-Review kiểm tra diễn đạt và đối chiếu các góp ý đã được duyệt.
-Agent orchestration dùng pipeline điều khiển bằng code và task specific prompts để chuyển dữ liệu theo thứ tự kiểm soát được.
-Thiết kế này giúp xác định lỗi phát sinh ở tìm kiếm, đọc trang, tạo nội dung hay kiểm chứng.
-Các vai trò có thể dùng chung foundation model với prompt và context khác nhau; pipeline hiện được điều phối bằng code.
+Review sử dụng hybrid approach: deterministic checks phát hiện những mẫu như câu dài; LLM đánh giá ngữ nghĩa và cách diễn đạt. Structured output dạng JSON được kiểm tra trước khi hiển thị góp ý.
 
-## 11 AI Engineer — Input validation và content safety guardrails
+Feedback được duyệt hiện được đưa trực tiếp vào review context để agent chú ý đến vấn đề người học từng gặp. Đây chưa phải semantic retrieval bằng vector database và cũng không phải fine-tuning.
 
-Backend kiểm tra độ dài, trường bắt buộc và thời lượng trước khi tạo phiên hợp lệ.
-Một lớp content policy xét chủ đề, mục tiêu và người học trước khi gọi tìm kiếm.
-Safety guardrails kết hợp rule based filtering cho mẫu rõ ràng và LLM based contextual classification khi đã cấu hình.
-Nội dung giáo dục nhạy cảm cần được đánh giá theo mục đích và cách trình bày.
-Nếu bị từ chối, hệ thống giải thích rằng nội dung không phù hợp để tìm tài liệu.
-Nếu bước phân loại gặp lỗi, hệ thống báo chưa thể kiểm tra và yêu cầu thử lại.
-Chúng em phân biệt hai tình huống này để tránh gán nhãn sai cho người dùng khi dịch vụ gặp sự cố.
+Approval gate giữ giảng viên trong vòng quyết định. Với kịch bản nhập vào để rà soát, Done xác nhận biên tập; không tự chứng nhận mọi thông tin là đúng.
 
-## 12 AI Engineer — Query expansion và web retrieval
+### 3:15–4:00 — Bài học thực tế và hướng phát triển
 
-Query expansion tạo topic query và objective conditioned queries, mỗi truy vấn mở rộng vẫn giữ chủ đề chính.
-Tavily Search được gọi với chế độ tìm kiếm nâng cao để thu thập ứng viên.
-Kết quả được phân phối giữa các truy vấn nhằm tăng độ bao phủ các mục tiêu.
-URL deduplication và source budget giới hạn dữ liệu ứng viên, giúp kiểm soát latency và chi phí retrieval.
-Giao diện hiển thị truy vấn đã tìm để giảng viên hiểu phạm vi research.
-Ở bước này, dữ liệu đầu ra là URL ứng viên cùng thông tin tìm kiếm.
-Muốn dùng làm căn cứ, mỗi URL còn phải đi qua bước đọc và đánh giá nội dung.
+Qua user testing, nhóm ghi nhận research lệch chủ đề, kịch bản chưa bám nguồn và thời gian generation dài. Nhóm cải thiện truy vấn, kiểm tra evidence, giới hạn context và bổ sung progress log.
 
-## 13 AI Engineer — Content extraction, normalization và provenance
+Với tài liệu dài, hệ thống chọn các cửa sổ văn bản liên quan thay vì gửi toàn bộ; đồng thời giới hạn timeout theo từng tác vụ. Đánh đổi là có thể bỏ sót thông tin ngoài context, nên vẫn cần kiểm tra độ bao phủ.
 
-Trước khi tải trang, backend kiểm tra URL công khai và hạn chế địa chỉ local hoặc mạng riêng.
-HTTP fetch tải HTML; Cheerio chọn vùng article, main hoặc phần nội dung chính của Wikipedia.
-Các vùng điều hướng và thành phần như menu, footer, script được loại khỏi văn bản đọc.
-Text normalization xử lý entity HTML và tạo source snapshot để lưu content provenance tại thời điểm research.
-Snapshot cùng hash hỗ trợ nhận diện bản nội dung dùng khi trích dẫn.
-Nếu đọc trực tiếp thất bại, Tavily Extract có thể cung cấp phương án bổ sung.
-Extraction budget giới hạn snapshot; context đưa vào model phụ thuộc dữ liệu đã đọc được và context window của model.
+Roadmap ưu tiên feedback theo bài học, bộ evaluation có nhãn và RAG khi lượng feedback tăng. Chúng em sẽ đánh giá groundedness, độ phù hợp của research, tỷ lệ chấp nhận góp ý và latency.
 
-## 14 AI Engineer — Source assessment và media enrichment
+ScriptScout hướng tới một quy trình biên tập có căn cứ, có phản hồi và có người phê duyệt. Xin cảm ơn thầy cô và các bạn.
 
-Source assessment kết hợp metadata, quality signals, đoạn trích và extraction status để hỗ trợ lựa chọn nguồn.
-Danh sách ưu tiên nguồn đã lấy được nội dung để giảng viên dễ chọn dữ liệu sử dụng được.
-Một số nguồn thiếu tác giả có thể được chọn kèm cảnh báo theo chính sách của hệ thống.
-Media enrichment thu thập URL ảnh hoặc video và gắn với source; bước này hiện chưa thực hiện visual understanding toàn diện.
-Media giúp đề xuất minh họa cho cảnh, còn bằng chứng kiến thức cần dựa trên nội dung phù hợp.
-Trang đăng nhập, chặn truy cập hoặc phụ thuộc JavaScript có thể không đọc được bằng luồng hiện tại.
-Với video, việc lấy được link chưa đồng nghĩa đã lấy transcript hoặc hiểu nội dung bên trong video.
+## Phần 2. Câu hỏi phản biện khó và câu trả lời gợi ý
 
-## 15 AI Engineer — Context engineering, grounding và evidence attribution
+Các câu trả lời dưới đây bám triển khai hiện tại. Những nội dung roadmap được ghi rõ là đề xuất.
 
-Agent writing nhận yêu cầu bài học và nội dung đã crawl của các nguồn được chọn.
-Context engineering đóng gói source snapshot, excerpts, metadata và media thành context cho bước generation.
-Prompt yêu cầu gom thông tin thành fact rồi tạo một kịch bản hoàn chỉnh từ các fact đó.
-Mỗi fact khai báo đoạn nguyên văn và nguồn hỗ trợ; mỗi câu khai báo các fact liên quan.
-Evidence validation dùng exact substring matching để loại các citation không tồn tại trong nội dung đã cấp.
-Evidence attribution duy trì chuỗi sentence, claim, evidence và source để truy ngược căn cứ của lời đọc.
-Đây là cơ chế grounding và truy vết; độ đúng của suy luận vẫn cần bước kiểm chứng tiếp theo.
+### 1. Người dùng có thể dùng ChatGPT để viết bài giảng. Vì sao cần sản phẩm này?
 
-## 16 AI Engineer — Claim verification, structured output và hybrid review
+**Trả lời:** Giá trị của ScriptScout nằm ở workflow: chọn nguồn, lưu nội dung đã đọc, liên kết câu với căn cứ, xử lý góp ý và phê duyệt phiên bản. Một chatbot vẫn có thể thực hiện nhiều bước tương tự, nhưng người dùng phải tự tổ chức và theo dõi chúng. Nhóm cần chứng minh lợi ích bằng UAT và thời gian hoàn thành nhiệm vụ, chưa thể khẳng định sản phẩm luôn tốt hơn chatbot.
 
-Claim verification đánh giá evidence support và contradiction để giảm unsupported claims trong kịch bản.
-Hybrid review kết hợp deterministic checks bằng code với semantic assessment của LLM.
-Code hỗ trợ phát hiện câu dài và một số trường hợp cần căn cứ; LLM đánh giá nghĩa, sắc thái và văn nói.
-Structured output được yêu cầu dưới dạng JSON gồm sentence reference, error span, severity, rationale và replacement khi có.
-Backend kiểm tra đoạn lỗi có tồn tại trong câu trước khi hiển thị hoặc áp dụng.
-Khi giảng viên chấp nhận sửa, vị trí thay thế được kiểm tra trên nội dung hiện tại.
-Nếu câu đã thay đổi hoặc đoạn cần sửa không rõ vị trí, hệ thống yêu cầu rà soát lại để tránh sửa nhầm.
+### 2. Gắn link nguồn có thực sự giải quyết hallucination không?
 
-## 17 AI Engineer — Approved feedback context injection hiện tại
+**Trả lời:** Chỉ gắn link chưa đủ. Hệ thống yêu cầu đoạn trích tồn tại trong context đã cấp và kiểm tra claim có được evidence hỗ trợ về nghĩa hay không. Tuy nhiên, nguồn có thể sai và LLM verifier cũng có thể sai. Đây là cơ chế giảm rủi ro và tăng traceability, chưa phải bảo đảm chính xác tuyệt đối.
 
-Hiện tại, backend lấy các feedback có trạng thái approved khi bắt đầu review.
-Feedback context injection đưa tiêu đề, nội dung và ID trực tiếp vào inference prompt cùng lời đọc.
-Agent được yêu cầu chỉ áp dụng góp ý liên quan đến câu đang xét.
-Finding có thể lưu feedback ID để biết đề xuất sửa bắt nguồn từ góp ý nào.
-Trust boundary quy định feedback là reference data; prompt yêu cầu bỏ qua instruction injection và không dùng feedback làm factual evidence.
-Bản hiện tại chưa có embedding và vector database cho feedback.
-Đây là direct context augmentation; bản hiện tại chưa có semantic retrieval hoặc fine tuning từ feedback.
+### 3. Hai nguồn nói giống nhau có nghĩa là thông tin đã được xác minh?
 
-## 18 AI Engineer — Đề xuất Retrieval Augmented Generation cho feedback
+**Trả lời:** Không chắc, vì hai trang có thể sao chép cùng một nguồn. Logic hiện tại đếm các source ID khác nhau; chưa xác định được tính độc lập về tác giả hay nguồn xuất bản. Đây là hạn chế cần cải thiện bằng kiểm tra provenance và trùng nội dung. Nhóm không nên coi “hai source ID” là chứng minh hai nguồn độc lập.
 
-Khi feedback tăng, gửi toàn bộ danh sách có thể làm context dài và chứa nhiều nội dung không liên quan.
-Chúng em đề xuất RAG để truy xuất góp ý phù hợp theo câu và bài học trước khi gọi review.
-Feedback đã duyệt được gắn metadata bài học, lớp, chủ đề và quyền truy cập.
-Embedding model mã hóa feedback thành dense vectors; pgvector hoặc Qdrant là các lựa chọn vector index cần đánh giá.
-Retrieval pipeline áp dụng metadata filtering trước hybrid retrieval, kết hợp lexical search với semantic similarity search.
-Reranking đề xuất dùng relevance scoring để chọn top K; token budget giới hạn context đưa vào generation.
-Đây là thiết kế mở rộng đề xuất, chưa phải kiến trúc RAG đang vận hành trong source hiện tại.
+### 4. Đây có thật sự là hệ thống multi-agent không?
 
-## 19 AI Engineer — Đề xuất retrieval evaluation và index lifecycle
+**Trả lời:** Hệ thống chia nhiệm vụ thành các vai trò AI với prompt và contract riêng; backend điều phối theo pipeline cố định. Các vai trò có thể dùng chung một model. Agent chưa tự lập kế hoạch hoặc tự chọn tool ngoài luồng code đã định. Cách mô tả chính xác là task-specific agent pipeline với deterministic orchestration.
 
-Khi không có kết quả vượt relevance threshold, fallback path chạy review bằng base instructions và deterministic checks.
-Index lifecycle cần hỗ trợ upsert và delete khi feedback được sửa, reject hoặc xóa để tránh stale retrieval.
-Truy xuất nên trả ID và nội dung góp ý để giữ khả năng giải thích kết quả.
-Offline evaluation đề xuất dùng Precision at K và Recall at K trên bộ query và feedback có relevance labels.
-End to end evaluation cần đo suggestion acceptance rate, groundedness và tỷ lệ false positive do feedback không phù hợp.
-Các ngưỡng retrieval cần được điều chỉnh bằng dữ liệu, tránh chọn tùy ý rồi coi là tối ưu.
-RAG cung cấp thông tin lúc suy luận; model không tự được huấn luyện lại từ mỗi feedback được duyệt.
+### 5. Nhóm có dùng RAG để xử lý feedback không?
 
-## 20 BA và AI Engineer — Governance, auditability và product roadmap
+**Trả lời:** Hiện chưa có embedding, vector index hay semantic retrieval cho feedback. Backend lấy feedback approved và đưa trực tiếp vào context của review. RAG là đề xuất khi dữ liệu tăng: lọc theo bài học và quyền truy cập, retrieval, reranking rồi chọn top K trong token budget. Việc bổ sung này cần evaluation để chứng minh hiệu quả.
 
-Revision hỗ trợ optimistic concurrency control; audit trail lưu nội dung trước và sau để tăng auditability.
-Done ghi nhận bản được giảng viên chốt, còn chỉnh sửa tiếp sẽ làm mất hiệu lực bản đã duyệt.
-File final.md chỉ chứa lời đọc; bản có ngữ cảnh và hồ sơ nguồn phục vụ kiểm tra riêng khi cần.
-Automated tests bao phủ extraction, query expansion, evidence validation, Markdown parsing và approval state transitions.
-Mock based tests xác nhận application logic; model quality cần offline evaluation và human evaluation trên bài giảng thực tế.
-Product roadmap ưu tiên lesson scoped feedback, evaluation dataset và RAG theo nhu cầu scale; các hạng mục này cần acceptance criteria trước triển khai.
-Chúng em mong ScriptScout giúp giảng viên biên tập có căn cứ và cải thiện bài giảng từ phản hồi người học.
-Xin cảm ơn thầy cô và các bạn đã theo dõi.
+### 6. Feedback approved có làm model học được kiến thức mới không?
+
+**Trả lời:** Feedback ảnh hưởng đến lần inference qua context, không cập nhật model weights. Nó giúp agent nhận diện vấn đề về cách giải thích hoặc diễn đạt; không được coi là bằng chứng xác thực kiến thức. Feedback hiện còn dùng chung, chưa phân phạm vi theo bài học, nên có nguy cơ nhiễu. Lesson-scoped feedback là một ưu tiên tiếp theo.
+
+### 7. Nếu sinh viên gửi feedback sai hoặc chèn lệnh điều khiển AI thì sao?
+
+**Trả lời:** Feedback phải qua giảng viên duyệt; prompt xem nó là dữ liệu tham khảo và yêu cầu bỏ qua instruction injection. Backend kiểm tra đầu ra, ID feedback và đoạn lỗi có thật trong câu. Những lớp này giảm rủi ro nhưng không loại bỏ mọi prompt injection. Cần bổ sung adversarial testing và giới hạn phạm vi feedback trước khi triển khai rộng.
+
+### 8. Tại sao có tài liệu “Không nên dùng” nhưng vẫn cho chọn?
+
+**Trả lời:** Badge là khuyến nghị về chất lượng, không phải mọi trường hợp đều là lệnh cấm. Người dùng có thể cần phân tích một tài liệu thiếu metadata hoặc chưa đạt tiêu chí. Hệ thống cho chọn khi đã đọc được nội dung và đáp ứng điều kiện an toàn; nguồn bị cách ly do injection vẫn bị loại. Chọn nguồn không tự nâng độ tin cậy của claim.
+
+### 9. Crawl được Facebook hay lấy link video có nghĩa là đọc được hết nội dung?
+
+**Trả lời:** Không. Luồng hiện tại chủ yếu đọc HTML công khai; trang cần đăng nhập hoặc render JavaScript có thể thất bại. URL video chưa cung cấp transcript hay nội dung hình ảnh cho model. Muốn xử lý video cần thêm transcript extraction hoặc speech recognition, rồi kiểm tra chất lượng trước khi dùng làm evidence.
+
+### 10. Cắt tài liệu dài để tránh timeout có làm mất context quan trọng không?
+
+**Trả lời:** Có thể. Hệ thống chọn cửa sổ văn bản theo chủ đề, mục tiêu và đoạn trích, giữ thứ tự bài viết trong giới hạn ngân sách. Cách này tiết kiệm context nhưng có thể bỏ mất điều kiện hoặc ngoại lệ ở phần khác. Cần đánh giá coverage và bổ sung đọc các đoạn lân cận khi evidence chưa đủ; chưa có bảo đảm recall hoàn toàn.
+
+### 11. Vì sao viết kịch bản lâu? Progress log có giải quyết được không?
+
+**Trả lời:** Latency gồm thời gian chờ provider, lượng context, lượng output và các bước kiểm chứng; retry có thể tăng tổng thời gian. Progress log cải thiện observability và UX, không tự làm inference nhanh hơn. Nhóm đã giới hạn context và timeout, nhưng cần đo latency từng stage, p50/p95 và token usage để xác định bottleneck thay vì chỉ tăng timeout.
+
+### 12. Nhiều góp ý trên một câu có ghi đè nhau không?
+
+**Trả lời:** Khi áp dụng, backend xác định span trong nội dung hiện tại và chỉ thay đoạn đó. Các vị trí còn lại được cập nhật theo độ dài thay đổi; đoạn giao nhau hoặc không xác định được sẽ cần rà soát lại. Revision giúp phát hiện cập nhật dựa trên phiên bản cũ. Cơ chế này tránh khôi phục cả câu và làm mất những sửa đổi đã chấp nhận.
+
+### 13. Bấm Done có nghĩa là kịch bản đã đúng toàn bộ kiến thức?
+
+**Trả lời:** Với luồng import để review, Done là phê duyệt biên tập, không phải chứng nhận factual accuracy. Luồng research có thêm điều kiện về kiểm chứng và xử lý vấn đề trước khi chốt. Khi nội dung thay đổi, phê duyệt phiên bản cũ mất hiệu lực. Nhóm cần diễn đạt rõ sự khác nhau này trong acceptance criteria.
+
+### 14. Nhóm chứng minh chất lượng AI bằng cách nào?
+
+**Trả lời:** Automated tests kiểm tra logic, schema và state transitions; tests dùng mock chưa chứng minh chất lượng model trên thực tế. Cần một evaluation dataset có nhãn: chủ đề, nguồn phù hợp, claim được hỗ trợ và góp ý đúng. Đo groundedness, research relevance, false positives, suggestion acceptance rate và latency. User testing hiện cung cấp các failure cases để xây dựng bộ đánh giá, chưa đủ suy ra độ chính xác chung.
+
+### 15. Kiến trúc hiện tại có đáp ứng nhiều người dùng đồng thời không?
+
+**Trả lời:** Revision và kiểm tra xung đột dữ liệu hỗ trợ bảo vệ cập nhật. Tuy nhiên, khóa xử lý trong bộ nhớ chỉ có hiệu lực trên từng instance; hệ thống chưa có distributed job queue hoặc workflow có thể tiếp tục sau sự cố. Khi mở rộng, cần durable job state, distributed locking, retry có kiểm soát và phân quyền dữ liệu theo lớp hoặc dự án.
+
+## Ghi nhớ khi trả lời
+
+- Trình bày theo cấu trúc: cơ chế hiện có → giới hạn → cách kiểm chứng hoặc hướng cải thiện.
+- Phân biệt evidence tồn tại với evidence hỗ trợ claim; phê duyệt biên tập với xác minh kiến thức.
+- Không gọi direct context augmentation là vector RAG hoặc fine-tuning.
+- Không đưa tỷ lệ chính xác, mức tiết kiệm thời gian hoặc khả năng scale khi chưa có dữ liệu đo.
