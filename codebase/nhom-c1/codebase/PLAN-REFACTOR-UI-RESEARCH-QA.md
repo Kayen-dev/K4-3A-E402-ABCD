@@ -6,7 +6,7 @@ Trạng thái: chỉ lập kế hoạch, chưa execute refactor. Bản này thay
 ## 1. Phạm vi và nguyên tắc
 
 - UI nguồn: `D:\K4-3A-E402-ABC\codebase` (React/TypeScript, Vite, Tailwind).
-- Đích: `D:\K4-3A-E402-ABC\nhom-c1\codebase`; mọi đường dẫn dưới đây tương đối với đích.
+- Đích: `D:\K4-3A-E402-ABC\codebase\nhom-c1\codebase`; mọi đường dẫn dưới đây tương đối với đích.
 - Copy frontend vào `ui/`, giữ backend `src/`, `server.js`, eval và fixtures C1. Giữ nguyên UI nguồn.
 - Tái sử dụng component/style/font nguồn; chỉ sửa nội dung và nối API thật. Không thiết kế lại theme.
 - Giữ Node ESM, adapter LLM và NDJSON hiện có. Không thêm agent framework, database, microservice, dashboard hoặc thư viện state mới.

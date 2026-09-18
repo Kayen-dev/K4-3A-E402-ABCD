@@ -2,6 +2,24 @@
 
 **SPEC → Prototype → Demo.** Đây không phải cuộc thi code — đây là cuộc thi **tư duy sản phẩm AI**.
 
+## Source code và chạy ScriptScout
+
+- Dự án chính: [codebase/nhom-c1](codebase/nhom-c1/).
+- App React + Node/API: `codebase/nhom-c1/codebase/`.
+- Prototype cũ: `codebase/codebase-demo/`.
+- Hướng dẫn chạy và deploy: [codebase/README.md](codebase/README.md).
+- Reflection Hồ Đình Tuấn Kiệt: [reflection/02785.DinhTuanKiet.md](reflection/02785.DinhTuanKiet.md).
+
+```powershell
+cd codebase/nhom-c1/codebase
+npm install
+npm --prefix ui install
+npm run build
+npm run dev
+```
+
+App local: http://127.0.0.1:5173. Vercel Production dùng nhánh `main` và Root Directory `codebase/nhom-c1/codebase`.
+
 ## 👥 Thành viên nhóm & Phân công vai trò
 
 **Lớp:** 3A · **Phòng:** E402 · **Cụm:** ____ · **Track:** C · Lesson Studio / ScriptScout

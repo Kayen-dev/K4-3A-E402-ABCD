@@ -34,13 +34,14 @@ function soatGitRoot() {
          "Khi nào nộp thì: git init ngay tại nhom-c3 (xem AN-TOAN-DU-LIEU.md).");
     return null;
   }
-  const dungCho = basename(top) === basename(ROOT);
+  const projectRelative = relative(top, ROOT).replace(/\\/g, '/');
+  const dungCho = projectRelative === '' || projectRelative === 'codebase/nhom-c1';
   if (dungCho) {
     inRa(true, `Repo git nằm đúng tại ${basename(top)}`);
   } else {
     inRa(false, `NGUY HIỂM: repo git nằm ở "${top}"`,
-      "Đó là bản clone của ban tổ chức, có cả data/. Push repo này là lộ toàn bộ data pack.\n" +
-      "      Cách xử lý: cd nhom-c3 && git init  → xem AN-TOAN-DU-LIEU.md");
+      "Dự án phải nằm tại gốc repo riêng hoặc codebase/nhom-c1 trong repo nhóm.\n" +
+      "      Kiểm tra remote và file data được theo dõi trước khi push.");
     loi.push("git root sai chỗ");
   }
   return top;

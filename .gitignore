@@ -88,6 +88,8 @@ yarn-error.log*
 
 # ─── 8 · Cache ──────────────────────────────────────────────────────
 .cache/
+.migration-backup/
+.vercel/
 .vite/
 .eslintcache
 .stylelintcache
@@ -117,3 +119,5 @@ ehthumbs_vista.db
 # ─── 11 · Antigravity / Gemini (AI tools) ──────────────────────────
 .gemini/
 .antigravity/
+.vercel
+.env*
