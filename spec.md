@@ -13,7 +13,7 @@ Ghi chú deploy: alias mong muốn `k4-abcd.vercel.app` không gán được vì
   - Job executor chính: biên tập viên/người viết kịch bản video bài giảng.
   - Người duyệt: giảng viên hoặc lab coach duyệt nội dung trước khi quay/dựng.
   - Workflow: nhập chủ đề, mục tiêu, người học, thời lượng → hệ thống tìm và chấm nguồn → người dùng duyệt nguồn → viết nháp có citation theo câu → QA văn nói và căn cứ → người dùng chấp nhận/giữ sửa → xuất bản nháp/duyệt.
-  - Canvas CP1 đính kèm: `codebase/src/docs/cp1-canvas.md`.
+  - Canvas CP1 đính kèm: `docs/cp1-canvas.md`.
 - Core JTBD (không tên sản phẩm/AI trong câu):
   - Khi được giao một chủ đề bài giảng, người viết cần tạo bản nháp lời đọc mà mỗi câu mang thông tin đều truy được về đoạn tài liệu gốc, để người duyệt kiểm nhanh từng câu và chỉ sửa lại phần bị ảnh hưởng khi một nguồn bị loại.
 - Problem statement (KHÔNG chữ AI):
@@ -140,7 +140,7 @@ Ghi chú deploy: alias mong muốn `k4-abcd.vercel.app` không gán được vì
   | Latency | Báo first useful result và complete result riêng; fixture không tính là latency live |
 
 - Golden set (≥20 case theo cơ cấu trong guide §2.6, file trong eval/):
-  - File: `codebase/src/eval/golden_set.json`.
+  - File: `eval/golden_set.json`.
   - 28 case: 4 lớp ①/②/③/④, 9 case thường, 3 case hiếm.
   - 10/28 case có `nguon_du_lieu` từ data pack/evidence.
   - Verifier cấu trúc: `node eval/verify-btc-eval.js` đạt 14/14.
@@ -151,7 +151,7 @@ Ghi chú deploy: alias mong muốn `k4-abcd.vercel.app` không gán được vì
   | Thời điểm | Bộ test | Provider | Kết quả | Ghi chú |
   |---|---|---|---:|---|
   | 2026-09-17 trước refactor | Golden set 28 case | openai/stub theo môi trường | 24/28 = 85.7% | Lịch sử còn G25-G28 |
-  | 2026-09-17 sau refactor | Golden set 28 case | stub | 28/28 = 100% | `codebase/src/eval/run_results.md` |
+  | 2026-09-17 sau refactor | Golden set 28 case | stub | 28/28 = 100% | `eval/run_results.md` |
   | 2026-09-17 sau refactor | Refactor QA/lifecycle/security | stub | 10/10 = 100% | `codebase/src/codebase/EVAL-REFACTOR-REPORT.md` |
   | 2026-09-17 sau refactor | BTC verifier | n/a | 14/14 | Cấu trúc eval đạt checklist CP3/R4 |
   | 2026-09-17 deploy | Live `/api/status` | Vercel env | OK | `provider=openai`, `searchConfigured=true`, `llmConfigured=true` |
@@ -184,7 +184,7 @@ Hạn chế còn lại: chưa có test UX 5 người dùng mục tiêu; chưa đ
 | 2026-09-18 user testing | Bổ sung feedback Nguyễn Duy Phong 2A202602834 và Nguyễn Trí Dũng; thêm ngữ cảnh thực vật và lọc nguồn rõ ràng lệch đối tượng; giải thích tác giả/đơn vị xuất bản, hiển thị 5 tiêu chí cùng nhận xét; chuyển validation về thư mục gốc theo vị trí tài liệu hiện tại | `validation/user_testing_log.md`: research lá cây trả dinh dưỡng con người và đánh giá nguồn chưa giải thích rõ |
 | 2026-09-18 ghi nhận validation | Ghi nhận phản hồi Nguyễn Trường Bảo và các cải thiện đã thực hiện về context từ nguồn được chọn, kịch bản hoàn chỉnh và đối chiếu evidence với snapshot; chờ đánh giá lại | `validation/user_testing_log.md`: kịch bản chưa bám nội dung reference và còn chưa chính xác |
 | 2026-09-18 Vercel fix | Sử dụng ETag metadata khi cập nhật Blob, phát hiện thay đổi trong lúc đọc và trả 409 cho precondition conflict; bổ sung AUTH_SESSION_SECRET production và deploy; smoke test đăng nhập 200, tạo phiên 201, action 200, revision cũ 409, xóa phiên thử 200 | Log production ghi nhận BlobPreconditionFailedError và AUTH_NOT_CONFIGURED; 18 bài kiểm thử đạt |
-| 2026-09-16 CP1 | Chốt hướng C, job executor, pain, mining evidence ban đầu | Canvas CP1 `codebase/src/docs/cp1-canvas.md` |
+| 2026-09-16 CP1 | Chốt hướng C, job executor, pain, mining evidence ban đầu | Canvas CP1 `docs/cp1-canvas.md` |
 | 2026-09-16 | Mining kịch bản 40 câu và hồ sơ nguồn mẫu | Evidence B: 28/40 cần căn cứ, 0/40 có nguồn theo câu, 2/5 nguồn có vấn đề |
 | 2026-09-17 trước refactor | Golden set đạt 24/28 | Phát hiện G25-G28 và các mép injection/conflict/register |
 | 2026-09-17 refactor plan | Chuyển UI sang React/Vite kế thừa từ `D:\K4-3A-E402-ABC\codebase`, thêm API project/session | Yêu cầu UI dễ hiểu, nhanh, có research ngoài, giảm hallucination |

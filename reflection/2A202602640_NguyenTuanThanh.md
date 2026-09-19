@@ -10,9 +10,9 @@ Tôi đảm nhiệm vai trò Dev-QA, tham gia xây dựng prototype và kiểm t
 ## Phần việc trực tiếp phụ trách
 
 - Tham gia xây dựng prototype có thể chạy được và kiểm tra luồng từ nhập bài học, đọc nguồn đến tạo kịch bản và rà soát.
-- Chuẩn bị golden set và kết quả đánh giá trong `codebase/src/eval/`, gồm các tình huống bình thường, hiếm và các điều kiện an toàn bắt buộc.
+- Chuẩn bị golden set và kết quả đánh giá trong `eval/`, gồm các tình huống bình thường, hiếm và các điều kiện an toàn bắt buộc.
 - Phối hợp chuẩn bị fixture nguồn để kiểm tra đoạn trích, link lỗi, trang cần đăng nhập, nguồn thiếu tác giả, nguồn lạc đề và prompt injection.
-- Kiểm tra tính nhất quán giữa kết quả kỳ vọng, trạng thái nguồn, fact và câu được tạo; ghi nhận case không đạt trong `codebase/src/eval/run_results.md`.
+- Kiểm tra tính nhất quán giữa kết quả kỳ vọng, trạng thái nguồn, fact và câu được tạo; ghi nhận case không đạt trong `eval/run_results.md`.
 - Phối hợp kiểm thử hồi quy tại `codebase/src/codebase/tests/`, chú ý tới evidence validation, parsing Markdown và các trạng thái phê duyệt.
 - Đối chiếu phản hồi người thử trong `validation/user_testing_log.md` với hành vi thực tế, để bổ sung tình huống kiểm tra ngoài happy path.
 
@@ -28,7 +28,7 @@ Tôi phân biệt tests dùng stub hoặc mock với lời gọi model thật. M
 
 ## Bài học từ một trường hợp thất bại của nhóm
 
-Case G23 trong `codebase/src/eval/run_results.md` cố tình đưa vào một finding có quote không tồn tại trong câu. Kỳ vọng là loại một finding và giữ một finding hợp lệ, nhưng kết quả ghi nhận không loại finding nào và giữ cả hai. Nếu chỉ nhìn JSON đúng cấu trúc, hệ thống có thể hiển thị một góp ý không gắn được với nội dung thật.
+Case G23 trong `eval/run_results.md` cố tình đưa vào một finding có quote không tồn tại trong câu. Kỳ vọng là loại một finding và giữ một finding hợp lệ, nhưng kết quả ghi nhận không loại finding nào và giữ cả hai. Nếu chỉ nhìn JSON đúng cấu trúc, hệ thống có thể hiển thị một góp ý không gắn được với nội dung thật.
 
 Từ lỗi này, tôi nhận ra schema validation chưa đủ. Cần semantic invariants được kiểm tra bằng code, chẳng hạn quote phải là chuỗi con nguyên văn của câu trước khi finding được hiển thị hoặc áp dụng. Khi câu đã đổi, vị trí sửa cũng phải được kiểm tra lại; không thể tin offset do model cung cấp hoặc dùng toàn bộ câu cũ để ghi đè.
 

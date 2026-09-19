@@ -10,7 +10,7 @@ Tôi đảm nhiệm vai trò AI-BA, kết nối yêu cầu nghiệp vụ với t
 ## Phần việc trực tiếp phụ trách
 
 - Phân tích bài toán và tham gia đặc tả trong `spec.md`: đầu vào bài học, luồng chọn nguồn, viết kịch bản, rà soát và phê duyệt.
-- Thiết kế luồng AI/agent theo nhiệm vụ, gồm đánh giá nguồn, viết lời đọc, kiểm chứng claim và rà soát cách diễn đạt; phối hợp làm rõ kiến trúc trong `codebase/src/pipeline-v2.md`.
+- Thiết kế luồng AI/agent theo nhiệm vụ, gồm đánh giá nguồn, viết lời đọc, kiểm chứng claim và rà soát cách diễn đạt; phối hợp làm rõ kiến trúc trong `docs/SCRIPTSCOUT-PROJECT-PIPELINE.md`.
 - Đặc tả tiêu chí đánh giá nguồn: tác giả hoặc tổ chức chịu trách nhiệm, độ mới, tài liệu tham chiếu, mức liên quan và dấu hiệu lệnh chèn vào nội dung.
 - Thiết kế yêu cầu prompt và hợp đồng đầu ra: fact gắn với đoạn trích và nguồn, câu gắn với fact, góp ý chỉ rõ đoạn lỗi và lý do.
 - Phối hợp rà soát logic nguồn và context trong `codebase/src/codebase/src/`, để bước viết sử dụng nội dung tài liệu được chọn thay vì chỉ nhận tiêu đề hoặc URL.
@@ -28,7 +28,7 @@ Trong sản phẩm, tôi chú trọng grounding và evidence attribution: lời 
 
 ## Bài học từ một trường hợp thất bại của nhóm
 
-Trong báo cáo `codebase/src/eval/run_results.md`, case G13 kỳ vọng một trang đạt đủ tiêu chí được đánh dấu dùng, nhưng kết quả lại là dùng kèm cảnh báo với độ tin cậy trung bình. Điểm tiêu chí về tài liệu tham chiếu bị đánh giá không đạt. Trường hợp này cho thấy định nghĩa nghiệp vụ và cách hệ thống diễn giải bằng chứng chưa chắc đã thống nhất.
+Trong báo cáo `eval/run_results.md`, case G13 kỳ vọng một trang đạt đủ tiêu chí được đánh dấu dùng, nhưng kết quả lại là dùng kèm cảnh báo với độ tin cậy trung bình. Điểm tiêu chí về tài liệu tham chiếu bị đánh giá không đạt. Trường hợp này cho thấy định nghĩa nghiệp vụ và cách hệ thống diễn giải bằng chứng chưa chắc đã thống nhất.
 
 Tôi nhận ra rằng một nhãn như “uy tín” hoặc “có tài liệu tham chiếu” chưa đủ rõ để trở thành acceptance criteria. Cần xác định bằng chứng nào được tính, nội dung nào thực sự đã được scraper đọc và trường hợp thiếu metadata phải được xử lý thế nào. Việc phân tích cũng phải đối chiếu fixture, prompt và cách tính trạng thái, thay vì chỉ chỉnh prompt để khớp một đáp án.
 
