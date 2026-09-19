@@ -41,7 +41,8 @@ export async function clearAllFeedback(user) {
   if (user.role !== 'teacher') throw fault(403, 'FORBIDDEN', 'Chỉ giảng viên có thể xóa toàn bộ góp ý');
   const ids = await listFeedbackIds();
   await removeAllFeedback(ids);
-  return { deleted: ids.length, remaining: (await listFeedbackIds()).length };
+  const remaining = (await listFeedbackIds()).length;
+  return { deleted: ids.length - remaining, remaining };
 }
 
 export async function createFeedback(user, input) {

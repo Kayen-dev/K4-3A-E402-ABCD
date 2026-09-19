@@ -148,6 +148,7 @@ export async function removeAllFeedback(ids) {
   }
   const { del } = await blob();
   // One Blob API call avoids rate limiting caused by hundreds of parallel deletes.
-  const paths = ids.map(feedbackPath);
-  for (let i = 0; i < paths.length; i += 1000) await del(paths.slice(i, i + 1000));
+  // Vercel applies a store-wide rate limit after roughly 1,000 deletes.
+  // Delete one supported batch per request; the caller reports how many remain.
+  await del(ids.slice(0, 1000).map(feedbackPath));
 }
