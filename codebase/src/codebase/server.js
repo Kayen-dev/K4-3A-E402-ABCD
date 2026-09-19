@@ -7,7 +7,7 @@ import { createProject, getProject, listProjects, deleteProject, actionProject }
 import { provider } from './src/llm.js';
 import { RESPONSE_TIMEOUT_MS } from './src/run-limits.js';
 import { login, registerStudent, currentUser, requireRole, sessionCookie, clearSessionCookie } from './src/auth.js';
-import { listFeedback, createFeedback, updateFeedback, deleteFeedback, decideFeedback } from './src/feedback.js';
+import { listFeedback, createFeedback, updateFeedback, deleteFeedback, decideFeedback, clearAllFeedback } from './src/feedback.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const STATIC = join(HERE, 'ui', 'dist');
@@ -44,6 +44,7 @@ export async function handleRequest(req, res) {
       const user = requireRole(req);
       if (req.method === 'GET') return json(res, 200, { feedback: await listFeedback(user) });
       if (req.method === 'POST') return json(res, 201, await createFeedback(user, await body(req)));
+      if (req.method === 'DELETE') return json(res, 200, await clearAllFeedback(user));
       return json(res, 405, { code: 'METHOD_NOT_ALLOWED', message: 'Phương thức không được hỗ trợ' });
     }
     const feedbackMatch = /^\/api\/feedback\/([a-f0-9-]{36})(?:\/(decision))?$/.exec(url.pathname);

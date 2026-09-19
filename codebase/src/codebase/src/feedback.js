@@ -37,6 +37,13 @@ export async function listFeedback(user) {
     .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
 }
 
+export async function clearAllFeedback(user) {
+  if (user.role !== 'teacher') throw fault(403, 'FORBIDDEN', 'Chỉ giảng viên có thể xóa toàn bộ góp ý');
+  const ids = await listFeedbackIds();
+  await Promise.all(ids.map(id => removeFeedback(id)));
+  return { deleted: ids.length, remaining: (await listFeedbackIds()).length };
+}
+
 export async function createFeedback(user, input) {
   if (user.role !== 'student') throw fault(403, 'FORBIDDEN', 'Chỉ học sinh có thể gửi góp ý');
   const feedback = { id: randomUUID(), ...fields(input), authorEmail: user.email, authorName: user.fullName, authorStudentId: user.studentId,
