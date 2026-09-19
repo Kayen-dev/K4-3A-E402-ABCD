@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { readFeedback, writeFeedback, listFeedbackIds, removeFeedback } from './storage.js';
+import { readFeedback, writeFeedback, listFeedbackIds, removeFeedback, removeAllFeedback } from './storage.js';
 
 const locks = new Map();
 const validId = id => typeof id === 'string' && /^[a-f0-9-]{36}$/.test(id);
@@ -40,7 +40,7 @@ export async function listFeedback(user) {
 export async function clearAllFeedback(user) {
   if (user.role !== 'teacher') throw fault(403, 'FORBIDDEN', 'Chỉ giảng viên có thể xóa toàn bộ góp ý');
   const ids = await listFeedbackIds();
-  await Promise.all(ids.map(id => removeFeedback(id)));
+  await removeAllFeedback(ids);
   return { deleted: ids.length, remaining: (await listFeedbackIds()).length };
 }
 
