@@ -148,5 +148,6 @@ export async function removeAllFeedback(ids) {
   }
   const { del } = await blob();
   // One Blob API call avoids rate limiting caused by hundreds of parallel deletes.
-  await del(ids.map(feedbackPath));
+  const paths = ids.map(feedbackPath);
+  for (let i = 0; i < paths.length; i += 1000) await del(paths.slice(i, i + 1000));
 }
