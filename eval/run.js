@@ -9,12 +9,14 @@
 // Đó là lý do bộ fixture phải là tham số của scrape(), không phải một chế độ demo.
 
 import { readFile, writeFile } from "node:fs/promises";
+import { existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, "..");
-const CODEBASE = join(ROOT, "codebase");
+const CANDIDATE_CODEBASE = join(ROOT, "codebase", "src", "codebase");
+const CODEBASE = existsSync(CANDIDATE_CODEBASE) ? CANDIDATE_CODEBASE : join(ROOT, "codebase");
 const FIXTURES = join(CODEBASE, "fixtures", "pages");
 
 // pathToFileURL là bắt buộc: trên Windows, import("C:\\Users\\...") ném

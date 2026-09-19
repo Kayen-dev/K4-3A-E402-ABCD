@@ -10,7 +10,7 @@
     "build": "npm --prefix ui run build",
     "typecheck": "npm --prefix ui run typecheck",
     "test:research": "node --test tests/research.test.js",
-    "eval": "node ../eval/run.js",
+    "eval": "node ../../../eval/run.js",
     "eval:refactor": "node eval-refactor.js"
   },
   "engines": {
